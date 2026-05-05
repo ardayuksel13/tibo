@@ -1,0 +1,445 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --color-background: #161619;
+  --color-focus-background: #0B0F14;
+  --color-surface: #202024;
+  --color-surface-hover: #27272b;
+  --color-border: rgba(82, 82, 91, 0.36);
+  --color-border-soft: rgba(82, 82, 91, 0.22);
+  --color-border-strong: rgba(113, 113, 122, 0.52);
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  --color-primary: #3B82F6;
+  --color-primary-hover: #2563eb;
+  --color-danger: #EF4444;
+  --color-danger-hover: #dc2626;
+  --background: var(--color-background);
+  --foreground: var(--color-text-primary);
+  --accent: #3B82F6;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.tibo-metric-card {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.tibo-metric-card:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
+}
+
+.tibo-metric-value {
+  animation: metricFlash 180ms ease-out both;
+}
+
+.font-tibo-mono {
+  font-family: 'Inter', sans-serif;
+}
+
+.tibo-h1 {
+  font-size: 40px;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  font-weight: 650;
+}
+
+.tibo-section-title {
+  font-size: 24px;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.tibo-body {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.tibo-meta {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.tibo-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.tibo-data {
+  font-family: 'Inter', sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.tibo-page {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.tibo-focus-page {
+  background: var(--color-focus-background);
+  color: var(--color-text-primary);
+}
+
+.tibo-card {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.tibo-card:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-hover);
+}
+
+.tibo-start-card {
+  border-color: rgba(113, 113, 122, 0.26);
+  background:
+    linear-gradient(180deg, rgba(39, 39, 43, 0.72), rgba(32, 32, 36, 0.62));
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.22),
+    0 1px 0 rgba(250, 250, 250, 0.035) inset;
+}
+
+.tibo-start-card:hover {
+  border-color: rgba(113, 113, 122, 0.34);
+  background:
+    linear-gradient(180deg, rgba(39, 39, 43, 0.78), rgba(32, 32, 36, 0.68));
+}
+
+.tibo-quiet-card {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.tibo-research {
+  border-left: 2px solid rgba(82, 82, 91, 0.78);
+  background: rgba(32, 32, 36, 0.34);
+  padding: 0.75rem 1rem;
+}
+
+.tibo-system-log {
+  border-left: 2px solid rgba(82, 82, 91, 0.68);
+  background: rgba(32, 32, 36, 0.28);
+  padding: 0.65rem 0.9rem;
+}
+
+.tibo-dashboard-strip {
+  border-top: 1px solid rgba(82, 82, 91, 0.42);
+  border-bottom: 1px solid rgba(82, 82, 91, 0.42);
+  background: #202024;
+}
+
+.tibo-dashboard-strip > div {
+  transition: background-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.tibo-dashboard-strip > div:hover {
+  background: rgba(39, 39, 42, 0.35);
+  transform: translateY(-1px);
+}
+
+.tibo-dashboard-strip > div p:last-child {
+  transition: color 150ms ease-out, transform 150ms ease-out;
+}
+
+.tibo-dashboard-strip > div:hover p:last-child {
+  color: #fafafa;
+  transform: translateY(-1px);
+}
+
+.tibo-time-grid {
+  position: relative;
+}
+
+.tibo-time-grid-shell,
+.tibo-empty-grid {
+  border: 1px solid rgba(82, 82, 91, 0.22);
+  background:
+    linear-gradient(rgba(82, 82, 91, 0.07) 1px, transparent 1px),
+    var(--color-background);
+  background-size: 100% 48px;
+}
+
+.tibo-time-grid::before {
+  content: '';
+  position: absolute;
+  left: 3.25rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(63, 63, 70, 0.9), transparent);
+}
+
+.tibo-time-block {
+  border: 1px solid rgba(82, 82, 91, 0.38);
+  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
+  animation: timeBlockLock 520ms ease-out both;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.tibo-time-block::after {
+  content: none;
+}
+
+.tibo-time-block:hover {
+  border-color: rgba(82, 82, 91, 0.95);
+  background: var(--color-surface-hover);
+  transform: translateY(-1px);
+}
+
+.tibo-hero-mark {
+  position: relative;
+  display: inline-block;
+}
+
+.tibo-hero-mark::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: 10.5rem;
+  height: 6rem;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0.07) 42%, transparent 78%);
+  filter: blur(28px);
+  z-index: -1;
+}
+
+.tibo-focus-core {
+  position: relative;
+}
+
+.tibo-focus-core::before {
+  content: none;
+}
+
+.tibo-input {
+  background: #242428;
+  border: 1px solid rgba(82, 82, 91, 0.34);
+  color: var(--color-text-primary);
+  transition: border-color 150ms ease-out, background-color 150ms ease-out;
+}
+
+.tibo-input::placeholder {
+  color: #52525b;
+}
+
+.tibo-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: #2a2a2f;
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.tibo-shake {
+  animation: tiboShake 360ms ease-in-out;
+}
+
+@keyframes tiboShake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.tibo-input:disabled {
+  cursor: not-allowed;
+  border-color: rgba(82, 82, 91, 0.26);
+  background: #1b1b1e;
+  color: #52525b;
+}
+
+.tibo-primary {
+  background: var(--color-primary);
+  color: #020617;
+  font-weight: 700;
+  transition: background-color 150ms ease-out, transform 100ms ease-out, opacity 150ms ease-out;
+}
+
+.tibo-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.tibo-primary:active {
+  transform: scale(0.98);
+}
+
+.tibo-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  background: #202024;
+  color: #3f3f46;
+}
+
+.tibo-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  border: 1px solid rgba(82, 82, 91, 0.48);
+  background: #202024;
+  color: var(--color-primary);
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out, transform 100ms ease-out;
+}
+
+.tibo-icon-button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
+}
+
+.tibo-icon-button:active {
+  transform: scale(0.98);
+}
+
+.tibo-cta-enter {
+  animation: ctaActivate 720ms ease-out both;
+}
+
+.tibo-panel-enter {
+  animation: panelEnter 360ms ease-out both;
+}
+
+.tibo-delay-1 { animation-delay: 60ms; }
+.tibo-delay-2 { animation-delay: 130ms; }
+.tibo-delay-3 { animation-delay: 200ms; }
+.tibo-delay-4 { animation-delay: 270ms; }
+.tibo-delay-5 { animation-delay: 340ms; }
+
+.tibo-breath-orb {
+  animation: boxBreathing 12s ease-in-out infinite;
+}
+
+.tibo-secondary {
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-primary);
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 100ms ease-out;
+}
+
+.tibo-secondary:hover {
+  border-color: #71717a;
+  background: rgba(24, 24, 27, 0.62);
+}
+
+.tibo-secondary:active {
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes panelEnter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes logoCoreBreath {
+  0%, 100% { opacity: 0.86; transform: translate(-50%, -50%) scale(0.96); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.14); }
+}
+
+@keyframes timeBlockLock {
+  0% { opacity: 0; transform: translateX(-18px); border-color: rgba(82, 82, 91, 0.9); }
+  58% { opacity: 1; transform: translateX(0); border-color: rgba(82, 82, 91, 0.82); }
+  100% { opacity: 1; transform: translateX(0); border-color: rgba(39, 39, 42, 0.95); }
+}
+
+@keyframes timeBlockScan {
+  0% { opacity: 0; transform: translateX(-120%); }
+  28% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(120%); }
+}
+
+@keyframes ctaActivate {
+  0% { opacity: 0; transform: translateY(14px); }
+  45% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes metricFlash {
+  0% { opacity: 0.72; transform: translateY(3px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes boxBreathing {
+  0%, 100% { transform: scale(0.78); opacity: 0.62; border-color: rgba(82, 82, 91, 0.72); }
+  33.333% { transform: scale(1.24); opacity: 0.92; border-color: rgba(161, 161, 170, 0.86); }
+  66.666% { transform: scale(1.24); opacity: 0.82; border-color: rgba(113, 113, 122, 0.82); }
+}
+.animate-slide-in {
+  animation: slideIn 200ms ease-out;
+}
+
+@keyframes auraMove {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -30px) scale(1.05); }
+}
+
+.aura-bg {
+  position: relative;
+  isolation: isolate;
+}
+.aura-bg::before {
+  content: none;
+}
+.aura-bg::after {
+  content: none;
+}
