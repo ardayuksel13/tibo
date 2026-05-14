@@ -8,7 +8,7 @@ export default function NotFoundPage() {
         <p className="tibo-body mb-8 text-zinc-500">Sayfa bulunamadı.</p>
         <Link
           href="/"
-          className="inline-flex h-11 items-center justify-center bg-[var(--color-primary)] px-5 text-sm font-semibold text-[#020617] transition-colors hover:bg-[var(--color-primary-hover)]"
+          className="tibo-primary inline-flex h-14 items-center justify-center px-5 text-sm font-semibold transition-colors"
         >
           Anasayfaya Dön
         </Link>

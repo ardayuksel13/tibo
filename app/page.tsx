@@ -1,11 +1,9 @@
 'use client';
 
-import type { ChangeEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Play, X } from 'lucide-react';
-import { Button, Card, Input, Label, MetricCard, SidebarItem } from './components/ui';
+import { ArrowRight, Clock, RefreshCw } from 'lucide-react';
 import { trackEvent } from './lib/analytics';
 
 type Box = {
@@ -17,8 +15,6 @@ type Box = {
 
 type MorningRitual = {
   primaryGoal: string;
-  deepWorkStart: string;
-  deepWorkEnd: string;
   blockedItems: string[];
   skipped?: boolean;
 };
@@ -33,6 +29,7 @@ type CompletedBox = {
   startedAt: string;
   finishedAt: string;
   date: string;
+  completionType?: CompletionType;
 };
 
 type Note = {
@@ -42,18 +39,13 @@ type Note = {
   finishedAt: string;
 };
 
-type ScheduleGap = {
-  start: string;
-  end: string;
-  duration: number;
-};
+type CompletionType = 'completed' | 'early_exit';
 
 const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const ACTIVE_SESSION_KEY = 'tibo-active-session';
 const LATEST_NEXT_STEP_KEY = 'tibo-next-step-latest';
 const NEXT_STEP_HISTORY_KEY = 'tibo-next-step-history';
-const FEEDBACK_URL = process.env.NEXT_PUBLIC_FEEDBACK_URL?.trim();
 
 function getTodayLabel(): string {
   const today = new Date();
@@ -106,8 +98,6 @@ function normalizeMorningRitual(data: Partial<MorningRitual> & Record<string, un
 
   return {
     primaryGoal: current.primaryGoal ?? String(data['tekGorev'] ?? ''),
-    deepWorkStart: current.deepWorkStart ?? String(data['deepWorkBaslangic'] ?? '09:00'),
-    deepWorkEnd: current.deepWorkEnd ?? String(data['deepWorkBitis'] ?? '11:00'),
     blockedItems: current.blockedItems ?? (Array.isArray(data['yasaklilar']) ? data['yasaklilar'] as string[] : []),
     skipped: current.skipped ?? Boolean(data['atlandi']),
   };
@@ -126,6 +116,30 @@ function formatMinutes(minutes: number): string {
   return '0dk';
 }
 
+function shouldUseSecondPrecision(plannedSeconds: number, actualSeconds = plannedSeconds): boolean {
+  return plannedSeconds < 5 * 60 || actualSeconds < 5 * 60;
+}
+
+function formatDurationSeconds(seconds: number, useSecondPrecision: boolean): string {
+  const safeSeconds = Math.max(0, Math.round(seconds));
+  if (!useSecondPrecision) {
+    return formatMinutes(Math.round(safeSeconds / 60));
+  }
+
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  if (minutes > 0 && remainingSeconds > 0) return `${minutes}dk ${remainingSeconds}sn`;
+  if (minutes > 0) return `${minutes}dk`;
+  return `${remainingSeconds}sn`;
+}
+
+function formatSignedDurationSeconds(seconds: number, useSecondPrecision: boolean): string {
+  const roundedSeconds = Math.round(seconds);
+  if (roundedSeconds === 0) return useSecondPrecision ? '0sn' : '0dk';
+  const sign = roundedSeconds > 0 ? '+' : '-';
+  return `${sign}${formatDurationSeconds(Math.abs(roundedSeconds), useSecondPrecision)}`;
+}
+
 function isCriticalVariance(plannedMinutes: number, actualMinutes: number): boolean {
   if (plannedMinutes <= 0 || actualMinutes <= 0) return false;
   const delta = Math.abs(actualMinutes - plannedMinutes);
@@ -136,15 +150,20 @@ function roundUpToFive(minutes: number): number {
   return Math.max(5, Math.ceil(minutes / 5) * 5);
 }
 
-function parseTimeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
+function isReliableCompletion(plannedSeconds: number, actualSeconds: number): boolean {
+  if (plannedSeconds <= 0 || actualSeconds <= 0) return false;
+  const remainingSeconds = plannedSeconds - actualSeconds;
+  const remainingRatio = remainingSeconds / plannedSeconds;
+  return actualSeconds / plannedSeconds >= 0.5 || remainingSeconds <= 15 || remainingRatio <= 0.1;
 }
 
-function formatClock(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${String(hours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}`;
+function resolveCompletionType(
+  plannedSeconds: number,
+  actualSeconds: number,
+  completionType?: CompletionType,
+): CompletionType {
+  if (completionType) return completionType;
+  return isReliableCompletion(plannedSeconds, actualSeconds) ? 'completed' : 'early_exit';
 }
 
 function getCurrentTimeValue(): string {
@@ -182,28 +201,6 @@ function isVagueTaskTitle(title: string): boolean {
   return genericWords.has(normalized);
 }
 
-function findScheduleGaps(sortedBoxes: Box[]): ScheduleGap[] {
-  const gaps: ScheduleGap[] = [];
-
-  for (let index = 0; index < sortedBoxes.length - 1; index += 1) {
-    const currentBox = sortedBoxes[index];
-    const nextBox = sortedBoxes[index + 1];
-    const currentEndsAt = parseTimeToMinutes(currentBox.time) + currentBox.duration;
-    const nextStartsAt = parseTimeToMinutes(nextBox.time);
-    const gapDuration = nextStartsAt - currentEndsAt;
-
-    if (gapDuration >= 30) {
-      gaps.push({
-        start: formatClock(currentEndsAt),
-        end: nextBox.time,
-        duration: gapDuration,
-      });
-    }
-  }
-
-  return gaps;
-}
-
 function readAllCompletedBoxes(): CompletedBox[] {
   try {
     const completedBoxes: CompletedBox[] = [];
@@ -222,10 +219,6 @@ function readAllCompletedBoxes(): CompletedBox[] {
   } catch {
     return [];
   }
-}
-
-function isAllowedBackupKey(key: string): boolean {
-  return key.startsWith('tibo-');
 }
 
 function readLatestResumeNotes(): string[] {
@@ -300,7 +293,6 @@ function isValidCompletedBox(completedBox: CompletedBox): boolean {
 
 export default function HomePage() {
   const router = useRouter();
-  const importInputRef = useRef<HTMLInputElement>(null);
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -310,7 +302,6 @@ export default function HomePage() {
   const [taskShake, setTaskShake] = useState(false);
   const [morningRitual, setMorningRitual] = useState<MorningRitual | null>(null);
   const [completedHistory, setCompletedHistory] = useState<CompletedBox[]>([]);
-  const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [hasActiveSessionLock, setHasActiveSessionLock] = useState(false);
   const [continuationWarning, setContinuationWarning] = useState('');
 
@@ -325,6 +316,11 @@ export default function HomePage() {
     const ritualRecord =
       localStorage.getItem(getMorningRitualStorageKey()) ??
       localStorage.getItem(getLegacyMorningRitualStorageKey());
+
+    if (!ritualRecord) {
+      router.replace('/sabah-toreni');
+      return;
+    }
 
     if (ritualRecord) {
       try {
@@ -409,11 +405,13 @@ export default function HomePage() {
   function validateTaskInput(rawTask: string, rawDuration: string): string | null {
     const parsedTask = parseTaskCommand(rawTask);
     const title = parsedTask.title.trim();
+    const typedDuration = rawDuration.trim().length > 0 ? Number(rawDuration) : NaN;
     const selectedDuration = parsedTask.durationFromCommand ?? Number(rawDuration);
 
     if (!title) return 'Önce görevi tanımla.';
     if (title.length < 3) return 'Önce görevi tanımla.';
     if (isVagueTaskTitle(title)) return 'Önce görevi tanımla.';
+    if (parsedTask.durationFromCommand === null && !Number.isFinite(typedDuration)) return 'Önce süreyi seç.';
     if (!Number.isFinite(selectedDuration) || selectedDuration <= 0) return 'Önce süreyi seç.';
     return null;
   }
@@ -434,30 +432,6 @@ export default function HomePage() {
       duration: compressedDuration ?? safeDuration,
       time: time || getCurrentTimeValue(),
     };
-  }
-
-  function addBox() {
-    if (hasActiveSessionLock) {
-      setFormError('Önce bunu bitir.');
-      triggerTaskShake();
-      return;
-    }
-    const validationError = validateTaskInput(taskTitle, duration);
-    if (validationError) {
-      setFormError(validationError);
-      triggerTaskShake();
-      return;
-    }
-    const newBox = buildBoxFromForm();
-    if (!newBox) {
-      setFormError('Önce görevi tanımla.');
-      triggerTaskShake();
-      return;
-    }
-    setFormError('');
-    setBoxes((previousBoxes) => [...previousBoxes, newBox]);
-    setTaskTitle('');
-    setDuration('30');
   }
 
   function startFocus() {
@@ -495,118 +469,27 @@ export default function HomePage() {
     router.push('/focus');
   }
 
-  function deleteBox(id: string) {
-    if (hasActiveSessionLock) {
-      setFormError('Önce bunu bitir.');
-      return;
-    }
-    setBoxes((previousBoxes) => previousBoxes.filter((box) => box.id !== id));
-  }
-
-  function addGapBox(gap: ScheduleGap, title: string) {
-    if (hasActiveSessionLock) {
-      setFormError('Önce bunu bitir.');
-      return;
-    }
-    const newBox: Box = {
-      id: Date.now().toString(),
-      title,
-      duration: gap.duration,
-      time: gap.start,
-    };
-    setBoxes((previousBoxes) => [...previousBoxes, newBox]);
-  }
-
   function restartMorningRitual() {
     localStorage.removeItem(getMorningRitualStorageKey());
     localStorage.removeItem(getLegacyMorningRitualStorageKey());
     router.push('/sabah-toreni');
   }
 
-  function exportData() {
-    const payload: Record<string, unknown> = {};
-    for (const key of Object.keys(localStorage)) {
-      if (!key.startsWith('tibo-')) continue;
-      const value = localStorage.getItem(key);
-      if (value === null) continue;
-      try {
-        payload[key] = JSON.parse(value);
-      } catch {
-        payload[key] = value;
-      }
-    }
-
-    const blob = new Blob([JSON.stringify({
-      exportedAt: new Date().toISOString(),
-      app: 'TiBo',
-      data: payload,
-    }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `tibo-veri-${getTodayStamp()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function importData(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text) as { data?: Record<string, unknown> };
-      const data = parsed.data;
-      if (!data || typeof data !== 'object') return;
-
-      const shouldImport = window.confirm('Veri içe aktarılsın mı? Aynı kayıtlar değişir.');
-      if (!shouldImport) return;
-
-      let importedCount = 0;
-      for (const [key, value] of Object.entries(data)) {
-        if (!isAllowedBackupKey(key)) continue;
-        if (typeof value === 'string' && value.length > 2_000_000) continue;
-        const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-        if (serialized.length > 2_000_000) continue;
-        localStorage.setItem(key, serialized);
-        importedCount += 1;
-      }
-      if (importedCount === 0) {
-        window.alert('İçe aktarılacak geçerli TiBo verisi bulunamadı.');
-        return;
-      }
-      window.location.reload();
-    } catch {
-      window.alert('JSON dosyası okunamadı.');
-    } finally {
-      event.target.value = '';
-    }
-  }
-
   if (!isLoaded) return null;
 
   const sortedBoxes = [...boxes].sort((a, b) => a.time.localeCompare(b.time));
-  const scheduleGaps = findScheduleGaps(sortedBoxes);
-
-  const totalMinutes = boxes.reduce((total, box) => total + box.duration, 0);
-  const hourCount = Math.floor(totalMinutes / 60);
-  const minuteCount = totalMinutes % 60;
-  const formattedDuration =
-    hourCount > 0 && minuteCount > 0
-      ? `${hourCount}s ${minuteCount}dk`
-      : hourCount > 0
-      ? `${hourCount}s`
-      : minuteCount > 0
-      ? `${minuteCount}dk`
-      : '';
+  const plannedCount = boxes.length;
   const parsedTaskPreview = parseTaskCommand(taskTitle);
   const previewTaskTitle = parsedTaskPreview.title;
   const previewDuration = parsedTaskPreview.durationFromCommand ?? Number(duration || 30);
-  const matchingCompletedBoxes = completedHistory.filter(
-    (completedBox) =>
-      isValidCompletedBox(completedBox) &&
-      normalizeTaskTitle(completedBox.boxTitle) === normalizeTaskTitle(previewTaskTitle),
-  );
+  const matchingCompletedBoxes = completedHistory.filter((completedBox) => {
+    if (!isValidCompletedBox(completedBox)) return false;
+    if (normalizeTaskTitle(completedBox.boxTitle) !== normalizeTaskTitle(previewTaskTitle)) return false;
+    const plannedSeconds = completedBox.plannedDuration * 60;
+    const actualSecondsForBox = completedBox.actualDurationSeconds ?? completedBox.actualDuration * 60;
+    const completionType = resolveCompletionType(plannedSeconds, actualSecondsForBox, completedBox.completionType);
+    return completionType === 'completed';
+  });
   const averageActualMinutes = matchingCompletedBoxes.length > 0
     ? Math.round(
         matchingCompletedBoxes.reduce(
@@ -616,15 +499,7 @@ export default function HomePage() {
         ) / matchingCompletedBoxes.length,
       )
     : 0;
-  const latestCompletedBox = [...matchingCompletedBoxes].sort((a, b) =>
-    b.finishedAt.localeCompare(a.finishedAt),
-  )[0] ?? null;
   const enteredDuration = previewDuration;
-  const estimateDeltaPercent =
-    enteredDuration > 0 && averageActualMinutes > 0
-      ? Math.round(((averageActualMinutes - enteredDuration) / enteredDuration) * 100)
-      : 0;
-  const shouldShowEstimateWarning = previewTaskTitle.length > 0 && matchingCompletedBoxes.length > 0;
   const suggestedCompressedDuration = averageActualMinutes > 0
     ? roundUpToFive(averageActualMinutes)
     : 0;
@@ -639,9 +514,6 @@ export default function HomePage() {
     compressionDeltaPercent >= 10
       ? suggestedCompressedDuration
       : null;
-  const hasStrongEstimateWarning =
-    compressedDuration !== null || (matchingCompletedBoxes.length >= 3 && Math.abs(estimateDeltaPercent) >= 15);
-  const riskLabel = hasStrongEstimateWarning ? 'yüksek' : shouldShowEstimateWarning ? 'ölçüldü' : '—';
   const currentBoxIds = new Set(boxes.map((box) => box.id));
   const todaysCompletedBoxes = completedHistory.filter(
     (completedBox) =>
@@ -654,340 +526,214 @@ export default function HomePage() {
     (total, completedBox) => total + completedBox.plannedDuration,
     0,
   );
-  const actualMinutes = Math.round(
-    todaysCompletedBoxes.reduce(
-      (total, completedBox) => total + ((completedBox.actualDurationSeconds ?? completedBox.actualDuration * 60) / 60),
-      0,
-    ),
+  const plannedSecondsFromCompleted = plannedMinutesFromCompleted * 60;
+  const actualSeconds = todaysCompletedBoxes.reduce(
+    (total, completedBox) => total + (completedBox.actualDurationSeconds ?? completedBox.actualDuration * 60),
+    0,
   );
-  const varianceMinutes = actualMinutes > 0 ? actualMinutes - totalMinutes : 0;
-  const varianceDisplay = actualMinutes > 0
-    ? `${varianceMinutes > 0 ? '+' : varianceMinutes < 0 ? '-' : ''}${formatMinutes(Math.abs(varianceMinutes))}`
+  const actualMinutes = completedCount > 0 ? actualSeconds / 60 : 0;
+  const varianceSeconds = completedCount > 0 ? actualSeconds - plannedSecondsFromCompleted : 0;
+  const useSecondPrecision = completedCount > 0
+    ? shouldUseSecondPrecision(plannedSecondsFromCompleted, actualSeconds)
+    : false;
+  const varianceDisplay = completedCount > 0
+    ? formatSignedDurationSeconds(varianceSeconds, useSecondPrecision)
     : '—';
-  const hasCriticalVariance = isCriticalVariance(totalMinutes, actualMinutes);
-  const estimateAccuracy = completedCount > 0 && plannedMinutesFromCompleted > 0 && actualMinutes > 0
+  const hasCriticalVariance =
+    completedCount > 0 && isCriticalVariance(plannedMinutesFromCompleted, actualMinutes);
+  const estimateAccuracy = completedCount > 0 && plannedSecondsFromCompleted > 0 && actualSeconds > 0
     ? Math.max(
         0,
         Math.min(
           100,
-          Math.round((1 - Math.abs(actualMinutes - plannedMinutesFromCompleted) / plannedMinutesFromCompleted) * 100),
+          Math.round((1 - Math.abs(actualSeconds - plannedSecondsFromCompleted) / plannedSecondsFromCompleted) * 100),
         ),
       )
     : null;
-  const earliestStart = sortedBoxes.length > 0
-    ? Math.min(...sortedBoxes.map((box) => parseTimeToMinutes(box.time)))
-    : 8 * 60;
-  const latestEnd = sortedBoxes.length > 0
-    ? Math.max(...sortedBoxes.map((box) => parseTimeToMinutes(box.time) + box.duration))
-    : 18 * 60;
-  const gridStart = Math.max(0, earliestStart - 30);
-  const gridEnd = Math.min(24 * 60, latestEnd + 30);
-  const gridHeight = Math.max(180, gridEnd - gridStart);
-  const firstHour = Math.ceil(gridStart / 60) * 60;
-  const hourTicks = Array.from(
-    { length: Math.max(0, Math.floor((gridEnd - firstHour) / 60) + 1) },
-    (_, index) => firstHour + index * 60,
-  );
   const blockedItems =
     morningRitual && !morningRitual.skipped
       ? morningRitual.blockedItems.filter((item) => item.trim().length > 0)
       : [];
   const taskValidationError = validateTaskInput(taskTitle, duration);
   const isStartEnabled = taskValidationError === null;
+  const ritualIsActive = Boolean(morningRitual && !morningRitual.skipped);
+  const mainGoal = ritualIsActive ? morningRitual?.primaryGoal ?? '' : sortedBoxes[0]?.title ?? '';
+  const obstacleText = blockedItems.join(', ');
+  const focusScore = estimateAccuracy === null ? '—' : `%${estimateAccuracy}`;
+  const scoreLabel = `İsabet ${focusScore}`;
+  const activeFocusBars = estimateAccuracy === null ? 0 : Math.round((estimateAccuracy / 100) * 8);
+  const rightCompletedLabel = plannedCount > 0 ? `${completedCount}/${plannedCount}` : '—';
+  const rightTotalFocus = completedCount > 0
+    ? formatDurationSeconds(actualSeconds, useSecondPrecision)
+    : '—';
+  const remainingCount = Math.max(0, plannedCount - completedCount);
+  const hasPendingBoxes = remainingCount > 0;
+  const ctaLabel = hasPendingBoxes ? 'Sıradaki Göreve Devam Et' : 'Yeni Odak Bloğunu Başlat';
+  const taskSectionLabel = hasPendingBoxes ? 'YENİ GÖREV (İSTEĞE BAĞLI)' : 'SIRADAKİ GÖREV';
+  const taskSectionHint = hasPendingBoxes
+    ? `${remainingCount} görev hazır. İstersen yeni görev ekle, istemezsen doğrudan devam et.`
+    : 'Şimdi yapacağın tek işi yaz ve süre ver.';
 
   return (
-    <main className="animate-fade-in min-h-screen tibo-page px-6 py-6 md:px-8 lg:py-8">
-      <div className="mx-auto grid w-full max-w-[1180px] gap-8 lg:grid-cols-[220px_minmax(0,680px)_168px] xl:gap-10">
-        <aside className="lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)]">
-          <div className="flex h-full flex-col">
-            <div>
-              <h1 className="tibo-hero-mark font-tibo-mono text-[32px] font-bold tracking-tighter">
-                TiBo
-              </h1>
-              <p className="tibo-data tibo-meta mt-4">{getTodayLabel()}</p>
-            </div>
+    <main className="tibo-ref-page animate-fade-in">
+      <div className="tibo-ref-shell">
+        <aside className="tibo-ref-sidebar">
+          <div>
+            <Link href="/" className="tibo-ref-logo" aria-label="TiBo ana sayfa">
+              TiBo<span>.</span>
+            </Link>
 
-            <div className="my-8 border-t border-[var(--color-border-soft)]" />
-
-            {morningRitual ? (
-              <div>
-                <Label className="mb-4">Bugünün İşi</Label>
-                <p className="mb-6 break-words text-[18px] font-medium leading-snug tracking-[-0.01em] text-zinc-200/85">
-                  {morningRitual.primaryGoal}
-                </p>
-                <div className="flex flex-col gap-2 tibo-meta">
-                  <span><span className="tibo-data">{morningRitual.deepWorkStart} - {morningRitual.deepWorkEnd}</span></span>
-                  <span><span className="tibo-data">{morningRitual.blockedItems.length}</span> engel</span>
-                </div>
-              </div>
-            ) : sortedBoxes.length > 0 ? (
-              <div>
-                <Label className="mb-4">Bugünün İşi</Label>
-                <p className="mb-6 break-words text-[18px] font-medium leading-snug tracking-[-0.01em] text-zinc-200/85 capitalize">
-                  {sortedBoxes[0].title}
-                </p>
-                <div className="flex flex-col gap-2 tibo-meta">
-                  <span><span className="tibo-data">{sortedBoxes[0].time}</span> başlangıç</span>
-                  <span><span className="tibo-data">{sortedBoxes.length}</span> kutu</span>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <Label className="mb-4">Bugünün İşi</Label>
-                <Link href="/sabah-toreni" className="text-zinc-400 hover:text-white text-[15px] transition-colors duration-150">
-                  Plan yok. Kur →
-                </Link>
-              </div>
-            )}
-
-            <div className="mt-8 border-t border-[var(--color-border-soft)] pt-6">
-              <Link href="/gecmis" className="block text-zinc-600 hover:text-zinc-300 text-[15px] transition-colors duration-150 mb-4">
-                Geçmiş →
+            <nav className="tibo-ref-nav" aria-label="TiBo bölümleri">
+              <a href="#plan" className="tibo-ref-nav-item is-active">
+                <span>GÖREV</span>
+                <i />
+              </a>
+              <Link href="/focus?gunSonu=1" className="tibo-ref-nav-item">
+                KAPANIŞ
               </Link>
-              <SidebarItem
-                onClick={restartMorningRitual}
-                className="mb-4 text-zinc-600 hover:text-zinc-300"
-              >
-                Planı Yenile →
-              </SidebarItem>
-              <SidebarItem
-                onClick={() => setIsBackupOpen((current) => !current)}
-              >
-                Yedek
-              </SidebarItem>
-              {FEEDBACK_URL && (
-                <a
-                  href={FEEDBACK_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 block text-xs text-zinc-700 hover:text-zinc-400 transition-colors duration-150"
-                >
-                  Geri Bildirim ↗
-                </a>
-              )}
-              {isBackupOpen && (
-                <div className="mt-4 flex flex-col items-start gap-2 text-xs text-zinc-600">
-                  <SidebarItem onClick={exportData} className="text-xs">· indir</SidebarItem>
-                  <SidebarItem onClick={() => importInputRef.current?.click()} className="text-xs">· yükle</SidebarItem>
-                </div>
-              )}
-              <input
-                ref={importInputRef}
-                type="file"
-                accept="application/json"
-                onChange={importData}
-                className="hidden"
-              />
+              <Link href="/gecmis" className="tibo-ref-nav-item">
+                GEÇMİŞ
+              </Link>
+            </nav>
+          </div>
+
+          <div className="tibo-ref-sidebar-lower">
+            <div className="tibo-ref-storage">
+              <span>Veriler bu cihazda saklanır.</span>
+              <i />
             </div>
           </div>
         </aside>
 
-        <section className="lg:pt-0">
-          <header className="mb-5">
-            <h2 className="tibo-h1 text-zinc-50">
-              Bugün
-            </h2>
-            <p className="tibo-body mt-2 text-zinc-500">
-              Görev. Süre. Başlat.
-            </p>
+        <section className="tibo-ref-main">
+          <header className="tibo-ref-topbar">
+            <p>GÖREV AKIŞI</p>
+            <div>
+              <span>{getTodayLabel().toLocaleUpperCase('tr-TR')}</span>
+              <button type="button" onClick={restartMorningRitual}>
+                AKIŞI YENİLE
+                <RefreshCw className="h-4 w-4" strokeWidth={1.8} />
+              </button>
+            </div>
           </header>
 
-          <Card className="tibo-start-card mb-6 p-4 sm:p-5">
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_88px_210px]">
-              <Input
-                type="text"
-                placeholder="Bugün gerçekten neye odaklanıyorsun?"
-                value={taskTitle}
-                onChange={(e) => {
-                  setTaskTitle(e.target.value);
-                  if (formError) setFormError('');
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && startFocus()}
-                autoFocus
-                aria-label="Tek görev"
-                className={taskShake ? 'tibo-shake' : undefined}
-              />
-              <Input
-                type="number"
-                placeholder="30 dk"
-                min={1}
-                value={duration}
-                onChange={(e) => {
-                  setDuration(e.target.value);
-                  if (formError) setFormError('');
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && startFocus()}
-                className="font-tibo-mono text-center"
-                aria-label="Süre dakika"
-                title="Süre dakika"
-              />
-              <Button onClick={startFocus} size="md" variant="secondary" disabled={!isStartEnabled}>
-                <Play className="h-4 w-4" strokeWidth={1.75} />
-                Çalışmaya Başla
-              </Button>
-            </div>
-            {formError && (
-              <p className="tibo-meta mt-4 text-red-400">{formError}</p>
-            )}
-            {continuationWarning && !formError && (
-              <p className="tibo-meta mt-4 text-zinc-400">{continuationWarning}</p>
-            )}
-          </Card>
+          <div id="plan" className="tibo-ref-content-grid">
+            <div className="tibo-ref-primary">
+              <section className="tibo-ref-hero-block">
+                <h1 className="tibo-ref-hero">
+                  Sıradaki görevi başlat<span>.</span>
+                </h1>
+                <p>TEK İŞ. KISITLI SÜRE. NET SONUÇ.</p>
+              </section>
 
-          {(scheduleGaps.length > 0 || shouldShowEstimateWarning) && (
-            <details className="group mb-4 border border-[var(--color-border-soft)] bg-[var(--color-surface)]/35">
-              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3">
-                <Label>Uyarılar</Label>
-                <span className="tibo-meta text-zinc-700 group-open:hidden">aç</span>
-                <span className="hidden tibo-meta text-zinc-700 group-open:inline">kapat</span>
-              </summary>
-              <div className="border-t border-[var(--color-border-soft)] px-4 py-4">
-                {scheduleGaps.length > 0 && (
-                  <div className="mb-4 border-l border-zinc-700/70 pl-4">
-                    <Label className="mb-2 text-zinc-500">Tanımsız Zaman</Label>
-                    <div className="flex flex-col gap-3">
-                      {scheduleGaps.map((gap) => (
-                        <div key={`${gap.start}-${gap.end}`} className="flex items-center justify-between gap-4">
-                          <p className="tibo-body text-zinc-400">{gap.start}-{gap.end}: {formatMinutes(gap.duration)} boş.</p>
-                          <div className="flex gap-2">
-                            <Button variant="secondary" size="sm" onClick={() => addGapBox(gap, 'Dinlenme')}>Dinlenme</Button>
-                            <Button variant="secondary" size="sm" onClick={() => addGapBox(gap, 'Bilinçli boşluk')}>Bilinçli boşluk</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {shouldShowEstimateWarning && (
-                  <div className={`border-l pl-4 ${hasStrongEstimateWarning ? 'border-red-500/70' : 'border-zinc-700/70'}`}>
-                    <Label className="mb-2 text-zinc-500">Tahmin Hesaplayıcı</Label>
-                    {matchingCompletedBoxes.length === 1 && latestCompletedBox ? (
-                      <p className="tibo-body text-zinc-400">
-                        Son gerçek süre: {formatMinutes(
-                          Math.round((latestCompletedBox.actualDurationSeconds ?? latestCompletedBox.actualDuration * 60) / 60),
-                        )}.
-                      </p>
-                    ) : (
-                      <p className="tibo-body text-zinc-400">
-                        {matchingCompletedBoxes.length} kayıt. Ortalama: {formatMinutes(averageActualMinutes)}.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </details>
-          )}
+              <section className="tibo-ref-task-section">
+                <label htmlFor="task-title-ref">{taskSectionLabel}</label>
+                <div className={`tibo-ref-main-input ${taskShake ? 'tibo-shake' : ''}`}>
+                  <input
+                    id="task-title-ref"
+                    value={taskTitle}
+                    onChange={(event) => {
+                      setTaskTitle(event.target.value.slice(0, 80));
+                      setFormError('');
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') startFocus();
+                    }}
+                    placeholder="Sıradaki görevi yaz."
+                    autoFocus
+                    aria-label="Sıradaki görev"
+                  />
+                  <span>{taskTitle.length} / 80</span>
+                </div>
+                {formError && <p className="tibo-ref-error">{formError}</p>}
+                {continuationWarning && !formError && <p className="tibo-ref-muted-line">{continuationWarning}</p>}
+                {!formError && <p className="tibo-ref-muted-line">{taskSectionHint}</p>}
+              </section>
 
-          {sortedBoxes.length === 0 ? (
-            <Link
-              href="/sabah-toreni"
-              className="mb-6 inline-flex text-sm text-zinc-500 transition-colors duration-150 hover:text-zinc-300"
-            >
-              Plan yok. Kur →
-            </Link>
-          ) : (
-            <div className="relative tibo-time-grid-shell mb-6 px-4 py-4 opacity-55">
-              <div className="mb-4 flex items-center justify-between">
-                <Label>Günün Şekli</Label>
-                <p className="tibo-data tibo-meta text-zinc-700">{formatClock(gridStart)} - {formatClock(gridEnd)}</p>
-              </div>
-              <div className="relative ml-16" style={{ height: `${gridHeight}px` }}>
-                <div className="absolute left-0 top-0 bottom-0 w-px bg-[var(--color-border-soft)]" />
-                {hourTicks.map((tick) => (
-                  <div key={tick} className="absolute left-0 right-0 border-t border-zinc-900/40" style={{ top: `${tick - gridStart}px` }}>
-                    <span className="absolute -left-16 -top-2 tibo-data tibo-meta text-zinc-600">{formatClock(tick)}</span>
-                  </div>
-                ))}
-                {sortedBoxes.map((box) => {
-                  const startsAt = parseTimeToMinutes(box.time);
-                  return (
-                    <div
-                      key={box.id}
-                      className="tibo-time-block absolute left-6 right-0 px-4 py-2"
-                      style={{
-                        top: `${startsAt - gridStart}px`,
-                        minHeight: '56px',
-                        height: `${Math.max(56, box.duration)}px`,
+              <section className="tibo-ref-form-grid">
+                <div className="tibo-ref-focus-block">
+                  <h2>ODAK BLOĞU</h2>
+                  <label htmlFor="duration-ref">SÜRE</label>
+                  <div className="tibo-ref-time-input">
+                    <input
+                      id="duration-ref"
+                      type="number"
+                      min="1"
+                      value={duration}
+                      onChange={(event) => {
+                        setDuration(event.target.value);
+                        setFormError('');
                       }}
-                    >
-                      <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--color-primary)]" />
-                      <div className="flex h-full min-h-[32px] items-center gap-4 pl-2">
-                        <p className="tibo-data tibo-meta text-zinc-400 whitespace-nowrap">
-                          {box.time} · {box.duration}dk
-                        </p>
-                        <p className="text-white text-base font-medium truncate flex-1 capitalize">{box.title}</p>
-                        <Button
-                          onClick={() => deleteBox(box.id)}
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto px-2 py-2 text-zinc-700 hover:text-red-500"
-                          aria-label="Kutuyu sil"
-                        >
-                          <X className="h-4 w-4" strokeWidth={1.75} />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') startFocus();
+                      }}
+                      aria-label="Süre dakika"
+                    />
+                    <Clock className="h-4 w-4" strokeWidth={1.8} />
+                  </div>
+                  <p>Süre tahmini: yalnızca bu görev için.</p>
+                </div>
+
+                <div className="tibo-ref-mini-panel">
+                  <h2>DİKKAT TUZAKLARI</h2>
+                  <textarea readOnly value={obstacleText} placeholder="Dikkatini dağıtabilecek şeyleri yaz." />
+                  <span>{obstacleText.length} / 120</span>
+                </div>
+
+                <div className="tibo-ref-mini-panel">
+                  <h2>GÖREV KURALI</h2>
+                  <textarea readOnly value={mainGoal} placeholder="Bu blokta neye odaklanıyorsun?" />
+                  <span>{mainGoal.length} / 120</span>
+                </div>
+              </section>
+
+              <button
+                type="button"
+                className={`tibo-ref-blue-cta ${!isStartEnabled && !hasPendingBoxes ? 'is-locked' : ''}`}
+                onClick={startFocus}
+                aria-disabled={!isStartEnabled && !hasPendingBoxes}
+              >
+                <span>ENTER ↵</span>
+                <strong>{ctaLabel}</strong>
+                <ArrowRight className="h-6 w-6" strokeWidth={1.6} />
+              </button>
             </div>
-          )}
 
-          {boxes.length > 0 && (
-            <details className="group mt-8 border border-[var(--color-border-soft)] bg-[var(--color-surface)]/60">
-              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-4">
-                <Label>Gün Özeti</Label>
-                <span className="tibo-data tibo-meta text-zinc-700 group-open:hidden">
-                  {boxes.length} kutu · {formattedDuration || '—'}
-                </span>
-                <span className="hidden tibo-data tibo-meta text-zinc-700 group-open:inline">
-                  kapat
-                </span>
-              </summary>
-              <div className="border-t border-zinc-900">
-                <div className="grid grid-cols-1 sm:grid-cols-2">
-                  <MetricCard
-                    label="Planlanan Süre"
-                    value={formattedDuration || '—'}
-                    hint={`${boxes.length} kutu`}
-                  />
-                  <MetricCard
-                    label="Sapma"
-                    value={varianceDisplay}
-                    hint={actualMinutes > 0 ? 'planlanan / gerçek' : riskLabel === '—' ? 'ölçüm yok' : `risk: ${riskLabel}`}
-                    tone={hasCriticalVariance ? 'danger' : 'default'}
-                    className="sm:border-l-0"
-                  />
-                </div>
-                <div className="border-t border-zinc-900 px-4 py-3">
-                  <p className="tibo-meta text-zinc-600">Tamamlanan: {completedCount}/{boxes.length}</p>
-                </div>
-              </div>
-            </details>
-          )}
-        </section>
+            <aside className="tibo-ref-right-rail">
+              <section>
+                <h2>GÖREV DURUMU</h2>
+                <dl>
+                  <div>
+                    <dt>Tamamlanan Kutu</dt>
+                    <dd>{rightCompletedLabel}</dd>
+                  </div>
+                  <div>
+                    <dt>Sapma</dt>
+                    <dd className={hasCriticalVariance ? 'is-danger' : 'is-blue'}>{varianceDisplay}</dd>
+                  </div>
+                  <div>
+                    <dt>Toplam Odak</dt>
+                    <dd>{rightTotalFocus}</dd>
+                  </div>
+                </dl>
+              </section>
 
-        <aside className="border-t border-[var(--color-border-soft)] pt-6 lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:border-t-0 lg:pt-1">
-          <div className="flex h-full flex-col text-zinc-700">
-            <section aria-label="Bugünkü odak engelleri">
-              <Label className="mb-3 text-zinc-700">Odak Engeli</Label>
-              {blockedItems.length > 0 ? (
-                <div className="flex flex-wrap gap-x-3 gap-y-2 lg:flex-col lg:gap-2">
-                  {blockedItems.slice(0, 4).map((item) => (
-                    <span key={item} className="tibo-meta truncate text-zinc-600">
-                      {item}
-                    </span>
+              <section className="tibo-ref-focus-score">
+                <div className="tibo-ref-focus-score-line">
+                  <span>Tahmin sapması</span>
+                  <strong>{scoreLabel}</strong>
+                  <i />
+                </div>
+                <p className="tibo-ref-focus-note">Tahmin ile gerçek süre farkı.</p>
+                <div className="tibo-ref-bars" aria-hidden="true">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <span key={index} className={index < activeFocusBars ? 'is-active' : ''} />
                   ))}
-                  {blockedItems.length > 4 && (
-                    <span className="tibo-meta text-zinc-700">+{blockedItems.length - 4}</span>
-                  )}
                 </div>
-              ) : (
-                <p className="tibo-data tibo-meta text-zinc-700">—</p>
-              )}
-            </section>
+              </section>
+            </aside>
           </div>
-        </aside>
+        </section>
       </div>
     </main>
   );

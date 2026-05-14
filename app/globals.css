@@ -2,27 +2,39 @@
 @import "tailwindcss";
 
 :root {
-  --color-background: #161619;
-  --color-focus-background: #0B0F14;
-  --color-surface: #202024;
-  --color-surface-hover: #27272b;
-  --color-border: rgba(82, 82, 91, 0.36);
-  --color-border-soft: rgba(82, 82, 91, 0.22);
-  --color-border-strong: rgba(113, 113, 122, 0.52);
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563eb;
+  --color-background: #030609;
+  --color-focus-background: #030609;
+  --color-surface: rgba(10, 15, 22, 0.66);
+  --color-surface-hover: rgba(15, 22, 31, 0.78);
+  --color-border: rgba(148, 163, 184, 0.14);
+  --color-border-soft: rgba(148, 163, 184, 0.08);
+  --color-border-strong: rgba(148, 163, 184, 0.24);
+  --color-text-primary: #f4f1ea;
+  --color-text-secondary: rgba(244, 241, 234, 0.68);
+  --color-text-muted: rgba(244, 241, 234, 0.42);
+  --color-primary: #1684ff;
+  --color-primary-hover: #0f72df;
+  --color-primary-soft: rgba(22, 132, 255, 0.1);
+  --color-primary-line: rgba(22, 132, 255, 0.38);
   --color-danger: #EF4444;
   --color-danger-hover: #dc2626;
+  --tibo-bg-cinematic:
+    radial-gradient(circle at 50% 38%, rgba(22, 34, 48, 0.34), transparent 34rem),
+    radial-gradient(circle at 18% 8%, rgba(22, 132, 255, 0.024), transparent 24rem),
+    linear-gradient(180deg, #020407 0%, #030609 44%, #05080c 100%);
+  --tibo-border: rgba(148, 163, 184, 0.14);
+  --tibo-border-quiet: rgba(148, 163, 184, 0.08);
+  --tibo-title-tracking: -0.045em;
+  --tibo-title-line: 0.98;
+  --tibo-control-height: 3.5rem;
+  --tibo-control-padding-x: 1rem;
   --background: var(--color-background);
   --foreground: var(--color-text-primary);
-  --accent: #3B82F6;
+  --accent: var(--color-primary);
 }
 
 body {
-  background: var(--background);
+  background: var(--tibo-bg-cinematic);
   color: var(--foreground);
   font-family: 'Inter', sans-serif;
   font-size: 16px;
@@ -48,10 +60,19 @@ button:disabled {
   cursor: not-allowed;
 }
 
+:where(button, a, input, textarea, select, [role="button"]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .tibo-metric-card {
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+  background:
+    linear-gradient(180deg, rgba(25, 31, 40, 0.76), rgba(12, 15, 20, 0.78));
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 .tibo-metric-card:hover {
@@ -68,22 +89,35 @@ button:disabled {
 }
 
 .tibo-h1 {
-  font-size: 40px;
-  line-height: 1.06;
-  letter-spacing: -0.02em;
-  font-weight: 650;
+  font-size: clamp(2.25rem, 5.1vw, 3.75rem);
+  line-height: var(--tibo-title-line);
+  letter-spacing: var(--tibo-title-tracking);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-shadow: none;
+}
+
+.tibo-screen-title {
+  color: var(--color-text-primary);
+  font-size: clamp(2.125rem, 5.2vw, 3.75rem);
+  font-weight: 800;
+  letter-spacing: var(--tibo-title-tracking);
+  line-height: var(--tibo-title-line);
+  text-shadow: none;
 }
 
 .tibo-section-title {
   font-size: 24px;
-  line-height: 1.18;
-  letter-spacing: -0.01em;
-  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .tibo-body {
   font-size: 16px;
   line-height: 1.5;
+  color: var(--color-text-secondary);
 }
 
 .tibo-meta {
@@ -98,12 +132,13 @@ button:disabled {
 
 .tibo-label {
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  color: var(--color-text-muted);
+  font-weight: 700;
+  color: rgba(244, 241, 234, 0.58);
   font-size: 12px;
   letter-spacing: 0.14em;
   line-height: 1.15;
   text-transform: uppercase;
+  text-shadow: none;
 }
 
 .tibo-data {
@@ -114,44 +149,51 @@ button:disabled {
 }
 
 .tibo-page {
-  background: var(--color-background);
+  background: var(--tibo-bg-cinematic);
   color: var(--color-text-primary);
 }
 
 .tibo-focus-page {
-  background: var(--color-focus-background);
+  background: var(--tibo-bg-cinematic);
   color: var(--color-text-primary);
 }
 
 .tibo-card {
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 150ms ease-out;
+  background:
+    linear-gradient(180deg, rgba(10, 15, 22, 0.58), rgba(5, 8, 13, 0.62));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(10px);
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 .tibo-card:hover {
   border-color: var(--color-border-strong);
-  background: var(--color-surface-hover);
+  background:
+    linear-gradient(180deg, rgba(13, 19, 28, 0.66), rgba(7, 10, 16, 0.7));
 }
 
 .tibo-start-card {
-  border-color: rgba(113, 113, 122, 0.26);
+  border-color: rgba(148, 163, 184, 0.2);
   background:
-    linear-gradient(180deg, rgba(39, 39, 43, 0.72), rgba(32, 32, 36, 0.62));
+    linear-gradient(180deg, rgba(21, 27, 36, 0.82), rgba(10, 13, 18, 0.76));
   box-shadow:
-    0 22px 60px rgba(0, 0, 0, 0.22),
-    0 1px 0 rgba(250, 250, 250, 0.035) inset;
+    0 28px 90px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.015) inset,
+    0 1px 0 rgba(250, 250, 250, 0.045) inset;
 }
 
 .tibo-start-card:hover {
-  border-color: rgba(113, 113, 122, 0.34);
+  border-color: rgba(148, 163, 184, 0.28);
   background:
-    linear-gradient(180deg, rgba(39, 39, 43, 0.78), rgba(32, 32, 36, 0.68));
+    linear-gradient(180deg, rgba(24, 31, 40, 0.86), rgba(12, 15, 20, 0.8));
 }
 
 .tibo-quiet-card {
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background:
+    linear-gradient(180deg, rgba(18, 23, 30, 0.62), rgba(9, 12, 16, 0.66));
 }
 
 .tibo-research {
@@ -167,9 +209,9 @@ button:disabled {
 }
 
 .tibo-dashboard-strip {
-  border-top: 1px solid rgba(82, 82, 91, 0.42);
-  border-bottom: 1px solid rgba(82, 82, 91, 0.42);
-  background: #202024;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(11, 15, 21, 0.74);
 }
 
 .tibo-dashboard-strip > div {
@@ -196,11 +238,14 @@ button:disabled {
 
 .tibo-time-grid-shell,
 .tibo-empty-grid {
-  border: 1px solid rgba(82, 82, 91, 0.22);
+  border: 1px solid rgba(148, 163, 184, 0.11);
   background:
-    linear-gradient(rgba(82, 82, 91, 0.07) 1px, transparent 1px),
-    var(--color-background);
+    linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(11, 15, 21, 0.5), rgba(7, 9, 13, 0.52));
   background-size: 100% 48px;
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 
 .tibo-time-grid::before {
@@ -214,8 +259,9 @@ button:disabled {
 }
 
 .tibo-time-block {
-  border: 1px solid rgba(82, 82, 91, 0.38);
-  background: var(--color-surface);
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  background:
+    linear-gradient(180deg, rgba(28, 34, 43, 0.8), rgba(16, 20, 27, 0.86));
   position: relative;
   overflow: hidden;
   animation: timeBlockLock 520ms ease-out both;
@@ -227,14 +273,17 @@ button:disabled {
 }
 
 .tibo-time-block:hover {
-  border-color: rgba(82, 82, 91, 0.95);
-  background: var(--color-surface-hover);
+  border-color: var(--color-primary-line);
+  background:
+    linear-gradient(180deg, rgba(31, 39, 51, 0.88), rgba(17, 22, 30, 0.9));
   transform: translateY(-1px);
 }
 
 .tibo-hero-mark {
   position: relative;
   display: inline-block;
+  color: #f7f9fc;
+  text-shadow: none;
 }
 
 .tibo-hero-mark::after {
@@ -245,9 +294,14 @@ button:disabled {
   width: 10.5rem;
   height: 6rem;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0.07) 42%, transparent 78%);
-  filter: blur(28px);
+  background: radial-gradient(circle, rgba(22, 132, 255, 0.052) 0%, rgba(22, 132, 255, 0.018) 43%, transparent 78%);
+  filter: blur(18px);
   z-index: -1;
+}
+
+.tibo-blue-dot {
+  color: var(--color-primary);
+  text-shadow: 0 0 3px rgba(22, 132, 255, 0.13);
 }
 
 .tibo-focus-core {
@@ -258,22 +312,42 @@ button:disabled {
   content: none;
 }
 
+.tibo-operation-timer {
+  font-size: clamp(6.5rem, 20vw, 18rem);
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 0.82;
+  text-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.42);
+}
+
 .tibo-input {
-  background: #242428;
-  border: 1px solid rgba(82, 82, 91, 0.34);
+  background:
+    linear-gradient(180deg, rgba(10, 15, 22, 0.58), rgba(4, 8, 13, 0.68));
+  border: 1px solid var(--tibo-border);
   color: var(--color-text-primary);
-  transition: border-color 150ms ease-out, background-color 150ms ease-out;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.026);
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 .tibo-input::placeholder {
-  color: #52525b;
+  color: rgba(148, 163, 184, 0.44);
 }
 
 .tibo-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: #2a2a2f;
-  box-shadow: inset 3px 0 0 var(--color-primary);
+  background:
+    linear-gradient(180deg, rgba(24, 31, 42, 0.74), rgba(10, 14, 21, 0.78));
+  box-shadow:
+    inset 2px 0 0 var(--color-primary),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(22, 132, 255, 0.075);
+}
+
+.tibo-input:focus-visible {
+  border-color: var(--color-primary);
 }
 
 .tibo-shake {
@@ -291,31 +365,48 @@ button:disabled {
 
 .tibo-input:disabled {
   cursor: not-allowed;
-  border-color: rgba(82, 82, 91, 0.26);
-  background: #1b1b1e;
-  color: #52525b;
+  border-color: rgba(148, 163, 184, 0.1);
+  background: rgba(8, 11, 16, 0.36);
+  color: rgba(113, 122, 135, 0.62);
 }
 
 .tibo-primary {
-  background: var(--color-primary);
-  color: #020617;
+  background:
+    linear-gradient(100deg, #0a3b84 0%, #0f72df 46%, #1684ff 100%);
+  color: #f8fbff;
   font-weight: 700;
-  transition: background-color 150ms ease-out, transform 100ms ease-out, opacity 150ms ease-out;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(147, 197, 253, 0.21),
+    0 7px 16px rgba(22, 132, 255, 0.075);
+  transition: filter 150ms ease-out, transform 100ms ease-out, opacity 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 .tibo-primary:hover {
-  background: var(--color-primary-hover);
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 0 1px rgba(147, 197, 253, 0.32),
+    0 8px 18px rgba(22, 132, 255, 0.095);
 }
 
 .tibo-primary:active {
   transform: scale(0.98);
 }
 
+.tibo-primary:focus-visible,
+.tibo-secondary:focus-visible,
+.tibo-icon-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .tibo-primary:disabled {
   cursor: not-allowed;
   opacity: 0.42;
-  background: #202024;
-  color: #3f3f46;
+  background: rgba(11, 15, 21, 0.68);
+  color: rgba(113, 122, 135, 0.64);
+  box-shadow: none;
 }
 
 .tibo-icon-button {
@@ -323,15 +414,15 @@ button:disabled {
   align-items: center;
   justify-content: center;
   min-height: 100%;
-  border: 1px solid rgba(82, 82, 91, 0.48);
-  background: #202024;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(9, 12, 17, 0.58);
   color: var(--color-primary);
   transition: border-color 150ms ease-out, background-color 150ms ease-out, color 150ms ease-out, transform 100ms ease-out;
 }
 
 .tibo-icon-button:hover {
   border-color: var(--color-primary);
-  background: var(--color-surface-hover);
+  background: rgba(17, 24, 34, 0.76);
   color: var(--color-primary);
 }
 
@@ -358,15 +449,19 @@ button:disabled {
 }
 
 .tibo-secondary {
-  border: 1px solid var(--color-border-strong);
-  background: transparent;
+  border: 1px solid var(--tibo-border);
+  background:
+    linear-gradient(180deg, rgba(10, 15, 22, 0.5), rgba(4, 8, 13, 0.42));
   color: var(--color-text-primary);
-  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 100ms ease-out;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 100ms ease-out, box-shadow 150ms ease-out;
 }
 
 .tibo-secondary:hover {
-  border-color: #71717a;
-  background: rgba(24, 24, 27, 0.62);
+  border-color: var(--color-border-strong);
+  background:
+    linear-gradient(180deg, rgba(15, 22, 31, 0.62), rgba(6, 10, 16, 0.54));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .tibo-secondary:active {
@@ -442,4 +537,773 @@ button:disabled {
 }
 .aura-bg::after {
   content: none;
+}
+
+/* Reference dashboard skin */
+.tibo-ref-page {
+  min-height: 100vh;
+  background: var(--tibo-bg-cinematic);
+  color: var(--color-text-primary);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+}
+
+.tibo-ref-page * {
+  box-sizing: border-box;
+}
+
+.tibo-ref-page button,
+.tibo-ref-page input,
+.tibo-ref-page textarea {
+  border-radius: 0;
+  font: inherit;
+}
+
+.tibo-ref-shell {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 168px minmax(0, 1fr);
+}
+
+.tibo-ref-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid var(--tibo-border);
+  background: linear-gradient(180deg, rgba(5, 9, 15, 0.72), rgba(2, 5, 8, 0.62));
+  padding: 38px 36px 32px;
+}
+
+.tibo-ref-logo {
+  display: inline-flex;
+  color: var(--color-text-primary);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-decoration: none;
+  text-shadow: none;
+}
+
+.tibo-ref-logo span,
+.tibo-ref-hero span {
+  color: var(--color-primary);
+  text-shadow: 0 0 4px rgba(22, 132, 255, 0.1);
+}
+
+.tibo-ref-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  margin-top: 76px;
+}
+
+.tibo-ref-nav::after,
+.tibo-ref-sidebar-lower::before {
+  display: block;
+  height: 1px;
+  margin: 8px 0;
+  background: rgba(148, 163, 184, 0.16);
+  content: "";
+}
+
+.tibo-ref-nav-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: rgba(238, 242, 247, 0.68);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-align: left;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.tibo-ref-nav-item:hover,
+.tibo-ref-nav-item.is-active {
+  color: #f8fafc;
+}
+
+.tibo-ref-nav-item i {
+  width: 6px;
+  height: 6px;
+  background: var(--color-primary);
+  border-radius: 999px;
+  box-shadow: 0 0 4px rgba(22, 132, 255, 0.16);
+}
+
+.tibo-ref-sidebar-lower {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tibo-ref-backup-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: -12px;
+  padding-left: 10px;
+}
+
+.tibo-ref-backup-menu button {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(238, 242, 247, 0.54);
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.tibo-ref-storage {
+  display: grid;
+  gap: 12px;
+  margin-top: 38px;
+  color: rgba(238, 242, 247, 0.6);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tibo-ref-storage i {
+  width: 6px;
+  height: 6px;
+  background: #56f188;
+  border-radius: 999px;
+  box-shadow: 0 0 14px rgba(86, 241, 136, 0.7);
+}
+
+.tibo-ref-main {
+  min-width: 0;
+  padding: 30px 54px 46px;
+}
+
+.tibo-ref-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(238, 242, 247, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.tibo-ref-topbar > div {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.tibo-ref-topbar p {
+  margin: 0;
+}
+
+.tibo-ref-topbar button {
+  display: inline-flex;
+  height: 42px;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.025);
+  color: #f8fafc;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0 18px;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.tibo-ref-topbar button:hover {
+  border-color: rgba(148, 163, 184, 0.36);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.tibo-ref-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 880px) 168px;
+  gap: 36px;
+  margin-top: 44px;
+}
+
+.tibo-ref-primary {
+  min-width: 0;
+}
+
+.tibo-ref-hero-block p,
+.tibo-ref-subtitle {
+  margin-top: 16px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+}
+
+.tibo-ref-hero {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(2.875rem, 5.6vw, 4.625rem);
+  font-weight: 800;
+  letter-spacing: var(--tibo-title-tracking);
+  line-height: var(--tibo-title-line);
+  padding-bottom: 0.08em;
+  text-shadow: none;
+}
+
+.tibo-ref-hero span {
+  -webkit-text-fill-color: var(--color-primary);
+  text-shadow: none;
+}
+
+.tibo-ref-task-section {
+  margin-top: 24px;
+}
+
+.tibo-ref-task-section label,
+.tibo-ref-focus-block h2,
+.tibo-ref-focus-block label,
+.tibo-ref-mini-panel h2,
+.tibo-ref-card h2,
+.tibo-ref-card label,
+.tibo-ref-right-rail h2 {
+  display: block;
+  color: rgba(244, 241, 234, 0.58);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.tibo-ref-main-input {
+  position: relative;
+  margin-top: 12px;
+  border: 1px solid var(--tibo-border);
+  background: rgba(4, 8, 13, 0.58);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.026);
+}
+
+.tibo-ref-main-input input {
+  width: 100%;
+  height: var(--tibo-control-height);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 17px;
+  font-weight: 560;
+  padding: 0 92px 0 var(--tibo-control-padding-x);
+}
+
+.tibo-ref-main-input input::placeholder,
+.tibo-ref-mini-panel textarea::placeholder {
+  color: rgba(244, 241, 234, 0.42);
+}
+
+.tibo-ref-main-input:focus-within,
+.tibo-ref-time-input:focus-within,
+.tibo-ref-mini-panel:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: inset 2px 0 0 var(--color-primary), 0 0 0 1px rgba(22, 132, 255, 0.075);
+}
+
+.tibo-ref-main-input span {
+  position: absolute;
+  right: 18px;
+  bottom: 15px;
+  color: rgba(238, 242, 247, 0.56);
+  font-size: 11px;
+}
+
+.tibo-ref-error,
+.tibo-ref-muted-line {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.tibo-ref-error {
+  color: #ff6b6b;
+}
+
+.tibo-ref-muted-line {
+  color: rgba(238, 242, 247, 0.52);
+}
+
+.tibo-ref-form-grid {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.tibo-ref-focus-block {
+  border-right: 1px solid rgba(148, 163, 184, 0.18);
+  padding-right: 28px;
+}
+
+.tibo-ref-focus-block label {
+  margin-top: 18px;
+  color: rgba(238, 242, 247, 0.54);
+  font-size: 11px;
+}
+
+.tibo-ref-time-input {
+  display: flex;
+  height: var(--tibo-control-height);
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  border: 1px solid var(--tibo-border);
+  background: rgba(4, 8, 13, 0.58);
+  color: var(--color-text-primary);
+  padding: 0 var(--tibo-control-padding-x);
+}
+
+.tibo-ref-time-input input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tibo-ref-time-input svg {
+  color: rgba(238, 242, 247, 0.76);
+}
+
+.tibo-ref-time-input.is-readonly span {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tibo-ref-focus-block p {
+  margin-top: 12px;
+  color: rgba(238, 242, 247, 0.46);
+  font-size: 11px;
+}
+
+.tibo-ref-mini-panel {
+  position: relative;
+  min-height: 132px;
+  border: 1px solid var(--tibo-border-quiet);
+  background: rgba(4, 8, 13, 0.28);
+  padding: 18px;
+}
+
+.tibo-ref-mini-panel h2 {
+  position: absolute;
+  top: -29px;
+  left: 0;
+}
+
+.tibo-ref-mini-panel textarea {
+  width: 100%;
+  min-height: 94px;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: rgba(244, 241, 234, 0.72);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.tibo-ref-mini-panel > span {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  color: rgba(238, 242, 247, 0.56);
+  font-size: 11px;
+}
+
+.tibo-ref-blue-cta {
+  display: grid;
+  width: 100%;
+  height: 70px;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-top: 14px;
+  border: 1px solid rgba(22, 132, 255, 0.32);
+  background: linear-gradient(180deg, rgba(10, 65, 138, 0.9), rgba(8, 45, 97, 0.94));
+  box-shadow: 0 7px 16px rgba(22, 132, 255, 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.tibo-ref-blue-cta:hover {
+  box-shadow: 0 8px 18px rgba(22, 132, 255, 0.095), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.tibo-ref-blue-cta:active {
+  transform: translateY(1px);
+}
+
+.tibo-ref-blue-cta.is-locked {
+  opacity: 0.72;
+}
+
+.tibo-ref-blue-cta span {
+  justify-self: start;
+  padding-left: 28px;
+  color: rgba(238, 242, 247, 0.74);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.tibo-ref-blue-cta strong {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.tibo-ref-blue-cta svg {
+  justify-self: end;
+  margin-right: 28px;
+}
+
+.tibo-ref-card-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.78fr);
+  gap: 18px;
+  margin-top: 40px;
+}
+
+.tibo-ref-card {
+  min-height: 236px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: radial-gradient(circle at 20% 0%, rgba(22, 132, 255, 0.04), transparent 210px), rgba(4, 8, 13, 0.42);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.24);
+  padding: 26px 30px;
+}
+
+.tibo-ref-card header p {
+  margin-top: 12px;
+  color: rgba(238, 242, 247, 0.52);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tibo-ref-preview-timer {
+  margin-top: 32px;
+  color: #f8fafc;
+  font-size: 58px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.tibo-ref-pause-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  color: rgba(238, 242, 247, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.tibo-ref-hold-button {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 34px;
+  border: 1px solid rgba(239, 68, 68, 0.7);
+  background: rgba(239, 68, 68, 0.025);
+  color: #ff6b6b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  padding: 0 22px;
+}
+
+.tibo-ref-hold-button small {
+  color: rgba(238, 242, 247, 0.62);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.tibo-ref-note-preview {
+  min-height: 72px;
+  margin-top: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.015);
+  color: rgba(238, 242, 247, 0.58);
+  font-size: 13px;
+  padding: 18px;
+}
+
+.tibo-ref-card button {
+  width: 100%;
+  height: 44px;
+  margin-top: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.035);
+  color: #f8fafc;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.tibo-ref-system-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.tibo-ref-system-card > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(238, 242, 247, 0.58);
+  font-size: 12px;
+}
+
+.tibo-ref-right-rail {
+  min-height: 300px;
+  align-self: start;
+  border-left: 1px solid rgba(148, 163, 184, 0.12);
+  padding-left: 16px;
+  opacity: 0.72;
+}
+
+.tibo-ref-right-rail section + section {
+  margin-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  padding-top: 14px;
+}
+
+.tibo-ref-right-rail dl {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tibo-ref-right-rail dl div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.tibo-ref-right-rail dt {
+  color: rgba(238, 242, 247, 0.46);
+  font-size: 9px;
+}
+
+.tibo-ref-right-rail dd {
+  color: rgba(248, 250, 252, 0.78);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.tibo-ref-right-rail dd.is-blue {
+  color: rgba(82, 163, 255, 0.82);
+}
+
+.tibo-ref-right-rail dd.is-danger {
+  color: rgba(255, 107, 107, 0.78);
+}
+
+.tibo-ref-focus-score-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tibo-ref-focus-score-line span {
+  color: rgba(238, 242, 247, 0.44);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.tibo-ref-focus-note {
+  margin-top: 7px;
+  color: rgba(238, 242, 247, 0.44);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.tibo-ref-focus-score strong {
+  color: rgba(248, 250, 252, 0.7);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.tibo-ref-focus-score i {
+  width: 4px;
+  height: 4px;
+  background: var(--color-primary);
+  border-radius: 999px;
+  box-shadow: 0 0 3px rgba(22, 132, 255, 0.13);
+}
+
+.tibo-ref-bars {
+  display: flex;
+  align-items: end;
+  gap: 5px;
+  margin-top: 10px;
+  opacity: 0.48;
+}
+
+.tibo-ref-bars span {
+  width: 2px;
+  height: 8px;
+  background: rgba(238, 242, 247, 0.18);
+}
+
+.tibo-ref-bars span:nth-child(2) { height: 10px; }
+.tibo-ref-bars span:nth-child(3) { height: 12px; }
+.tibo-ref-bars span:nth-child(4) { height: 15px; }
+.tibo-ref-bars span:nth-child(5) { height: 19px; }
+.tibo-ref-bars span:nth-child(6) { height: 24px; }
+.tibo-ref-bars span:nth-child(7) { height: 30px; }
+.tibo-ref-bars span:nth-child(8) { height: 34px; }
+
+.tibo-ref-bars span.is-active {
+  background: var(--color-primary);
+  box-shadow: 0 0 3px rgba(22, 132, 255, 0.12);
+}
+
+@media (max-width: 1180px) {
+  .tibo-ref-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tibo-ref-right-rail {
+    display: grid;
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+    border-left: 0;
+    padding-top: 24px;
+    padding-left: 0;
+  }
+
+  .tibo-ref-right-rail section + section {
+    margin-top: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .tibo-ref-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .tibo-ref-sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    padding: 20px 18px 18px;
+  }
+
+  .tibo-ref-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .tibo-ref-sidebar-lower {
+    gap: 16px;
+    margin-top: 22px;
+  }
+
+  .tibo-ref-storage {
+    margin-top: 16px;
+  }
+
+  .tibo-ref-main {
+    padding: 24px 16px 40px;
+  }
+
+  .tibo-ref-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .tibo-ref-topbar > div {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .tibo-ref-content-grid {
+    margin-top: 36px;
+  }
+
+  .tibo-ref-hero {
+    font-size: clamp(44px, 13vw, 72px);
+  }
+
+  .tibo-ref-form-grid,
+  .tibo-ref-card-row,
+  .tibo-ref-right-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .tibo-ref-focus-block {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .tibo-ref-blue-cta {
+    min-height: 70px;
+    height: auto;
+    grid-template-columns: 1fr;
+    gap: 3px;
+    padding: 14px 18px;
+  }
+
+  .tibo-ref-blue-cta span,
+  .tibo-ref-blue-cta svg {
+    display: none;
+  }
+
+  .tibo-operation-timer {
+    font-size: clamp(4.2rem, 20vw, 6.5rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .tibo-ref-hero {
+    font-size: clamp(40px, 14vw, 60px);
+  }
+
+  .tibo-operation-timer {
+    font-size: clamp(3.8rem, 24vw, 5.8rem);
+  }
+
+  .tibo-ref-topbar button {
+    height: 40px;
+    padding: 0 14px;
+  }
 }

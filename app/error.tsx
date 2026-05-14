@@ -22,13 +22,13 @@ export default function GlobalError({
         <div className="flex flex-wrap gap-3">
           <button
             onClick={reset}
-            className="inline-flex h-11 items-center justify-center bg-[var(--color-primary)] px-5 text-sm font-semibold text-[#020617] transition-colors hover:bg-[var(--color-primary-hover)]"
+            className="tibo-primary inline-flex h-14 items-center justify-center px-5 text-sm font-semibold transition-colors"
           >
             Tekrar Dene
           </button>
           <Link
             href="/"
-            className="inline-flex h-11 items-center justify-center border border-[var(--color-border)] px-5 text-sm text-zinc-300 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+            className="tibo-secondary inline-flex h-14 items-center justify-center px-5 text-sm transition-colors"
           >
             Anasayfaya Dön
           </Link>

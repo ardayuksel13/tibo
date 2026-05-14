@@ -21,7 +21,10 @@ type CompletedBox = {
   startedAt: string;
   finishedAt: string;
   date: string;
+  completionType?: CompletionType;
 };
+
+type CompletionType = 'completed' | 'early_exit';
 
 type Note = {
   boxId: string;
@@ -59,6 +62,25 @@ function formatMinutes(min: number): string {
   if (h > 0 && m > 0) return `${h}s ${m}dk`;
   if (h > 0) return `${h}s`;
   return `${m}dk`;
+}
+
+function resolveActualSeconds(completedBox: CompletedBox): number {
+  const fromSeconds = completedBox.actualDurationSeconds;
+  if (Number.isFinite(fromSeconds) && (fromSeconds ?? 0) > 0) return fromSeconds as number;
+  return Math.round(completedBox.actualDuration * 60);
+}
+
+function isReliableCompletion(plannedSeconds: number, actualSeconds: number): boolean {
+  if (plannedSeconds <= 0 || actualSeconds <= 0) return false;
+  const remainingSeconds = plannedSeconds - actualSeconds;
+  const remainingRatio = remainingSeconds / plannedSeconds;
+
+  return actualSeconds / plannedSeconds >= 0.5 || remainingSeconds <= 15 || remainingRatio <= 0.1;
+}
+
+function isReliableCompletedBox(completedBox: CompletedBox): boolean {
+  if (completedBox.completionType) return completedBox.completionType === 'completed';
+  return isReliableCompletion(completedBox.plannedDuration * 60, resolveActualSeconds(completedBox));
 }
 
 function isValidBox(box: Box): boolean {
@@ -137,6 +159,10 @@ function getCompletedForPlannedBoxes(boxes: Box[], completed: CompletedBox[]): C
   return completed.filter((item) => boxIds.has(item.boxId));
 }
 
+function getReliableCompletedForPlannedBoxes(boxes: Box[], completed: CompletedBox[]): CompletedBox[] {
+  return getCompletedForPlannedBoxes(boxes, completed).filter(isReliableCompletedBox);
+}
+
 function HistoryMetric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="min-w-0">
@@ -204,12 +230,12 @@ export default function HistoryPage() {
           >
             ← Anasayfa
           </Link>
-          <p className="tibo-data tibo-meta">{days.length} gün kayıt</p>
+          <p className="tibo-data tibo-meta">{days.length} oturum kaydı</p>
         </div>
 
         <header className="mb-8 border-b border-[var(--color-border-soft)] pb-6">
           <h1 className="tibo-h1 mb-4 text-white">Geçmiş</h1>
-          <p className="tibo-body text-zinc-500">Plan, sonuç, sapma.</p>
+          <p className="tibo-body text-zinc-500">Görev, süre, sonuç.</p>
         </header>
 
         {days.length === 0 ? (
@@ -217,22 +243,25 @@ export default function HistoryPage() {
             <h2 className="tibo-section-title mb-4">Veri yok.</h2>
             <p className="tibo-meta mb-6">Kutu bitir. Kayıt açılır.</p>
             <p className="tibo-body text-zinc-300 max-w-md">
-              Plan kur. Çalış.
+              Görev başlat. Çalış.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {days.map((day) => {
-              const plannedCount = day.boxes.length;
-              const completedForDay = getCompletedForPlannedBoxes(day.boxes, day.completed);
-              const completedCount = completedForDay.length;
-              const totalActualMinutes = Math.round(
-                completedForDay.reduce(
-                  (sum, item) => sum + ((item.actualDurationSeconds ?? item.actualDuration * 60) / 60),
-                  0,
-                ),
-              );
-              const completedLabel = plannedCount > 0 ? `${completedCount} / ${plannedCount}` : '—';
+	            {days.map((day) => {
+	              const plannedCount = day.boxes.length;
+	              const completedForDay = getReliableCompletedForPlannedBoxes(day.boxes, day.completed);
+	              const completedCount = completedForDay.length;
+	              const earlyClosedCount = getCompletedForPlannedBoxes(day.boxes, day.completed).filter(
+	                (completedBox) => !isReliableCompletedBox(completedBox),
+	              ).length;
+	              const totalActualMinutes = Math.round(
+	                completedForDay.reduce(
+	                  (sum, item) => sum + (resolveActualSeconds(item) / 60),
+	                  0,
+	                ),
+	              );
+	              const completedLabel = plannedCount > 0 ? `${completedCount} / ${plannedCount}` : '—';
               const primaryGoal = day.ritual && !day.ritual.skipped ? day.ritual.primaryGoal : null;
 
               return (
@@ -240,7 +269,7 @@ export default function HistoryPage() {
                   key={day.dateKey}
                   className="tibo-card p-4 transition-colors duration-150 hover:border-zinc-700/80 sm:p-5"
                 >
-                  <div className="flex items-start justify-between gap-6">
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <p className="tibo-data tibo-meta mb-2 text-zinc-700">{day.dateKey}</p>
                       <h2 className="tibo-section-title truncate text-zinc-100">
@@ -250,9 +279,13 @@ export default function HistoryPage() {
                         {primaryGoal ?? '—'}
                       </p>
                     </div>
-                    <div className="grid shrink-0 grid-cols-2 gap-6 text-right">
-                      <HistoryMetric label="Tamamlanan" value={completedLabel} />
-                      <HistoryMetric label="Odak Süresi" value={totalActualMinutes > 0 ? formatMinutes(totalActualMinutes) : '—'} />
+                    <div className="grid shrink-0 grid-cols-1 gap-4 text-left sm:grid-cols-2 sm:gap-6 sm:text-right">
+	                      <HistoryMetric
+	                        label="Tamamlanan"
+	                        value={completedLabel}
+	                        hint={earlyClosedCount > 0 ? `${earlyClosedCount} erken` : undefined}
+	                      />
+	                      <HistoryMetric label="Odak Süresi" value={totalActualMinutes > 0 ? formatMinutes(totalActualMinutes) : '—'} />
                     </div>
                   </div>
                 </article>
