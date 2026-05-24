@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Label } from '../components/ui';
+import { tf, useLanguage } from '../lib/i18n';
 
 type Box = {
   id: string;
@@ -56,12 +57,18 @@ const NOTES_PREFIX = 'tibo-notes-';
 const RITUAL_PREFIX = 'tibo-toren-';
 
 function formatMinutes(min: number): string {
-  if (min === 0) return '0dk';
+  if (min === 0) return '0m';
   const h = Math.floor(min / 60);
   const m = min % 60;
-  if (h > 0 && m > 0) return `${h}s ${m}dk`;
-  if (h > 0) return `${h}s`;
-  return `${m}dk`;
+  if (h > 0 && m > 0) return `${h}h ${m}m`;
+  if (h > 0) return `${h}h`;
+  return `${m}m`;
+}
+
+function formatSignedMinutes(min: number): string {
+  if (min === 0) return '0m';
+  const sign = min > 0 ? '+' : '-';
+  return `${sign}${formatMinutes(Math.abs(min))}`;
 }
 
 function resolveActualSeconds(completedBox: CompletedBox): number {
@@ -132,10 +139,13 @@ function parseDateKey(key: string, prefix: string): Date | null {
   return parsedDate;
 }
 
-function formatDateLong(d: Date): string {
-  const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-  const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} ${days[d.getDay()]}`;
+function formatDateLong(d: Date, language: 'tr' | 'en'): string {
+  return new Intl.DateTimeFormat(language === 'tr' ? 'tr-TR' : 'en-US', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    weekday: 'long',
+  }).format(d);
 }
 
 function formatDateKey(d: Date): string {
@@ -174,8 +184,24 @@ function HistoryMetric({ label, value, hint }: { label: string; value: string; h
 }
 
 export default function HistoryPage() {
+  const { language } = useLanguage('en');
   const [isLoaded, setIsLoaded] = useState(false);
   const [days, setDays] = useState<DayData[]>([]);
+  const t = {
+    loading: tf(language, 'Yükleniyor...', 'Loading...'),
+    home: tf(language, 'Anasayfa', 'Home'),
+    sessions: tf(language, 'oturum kaydı', 'session records'),
+    title: tf(language, 'Geçmiş', 'History'),
+    subtitle: tf(language, 'Görev, süre, sonuç.', 'Task, duration, result.'),
+    empty: tf(language, 'Kayıt yok.', 'No records.'),
+    emptySub: tf(language, 'İlk blok kapanınca burada görünür.', 'First closed block appears here.'),
+    emptyHint: tf(language, 'Tek görevi kilitle. Kaydı burada tut.', 'Lock one task. Keep the record here.'),
+    completed: tf(language, 'Tamamlanan', 'Completed'),
+    early: tf(language, 'erken', 'early'),
+    focusTime: tf(language, 'Odak Süresi', 'Focus Time'),
+    variance: tf(language, 'Sapma', 'Variance'),
+    task: tf(language, 'Görev', 'Task'),
+  };
 
   useEffect(() => {
     const dateKeys = Object.keys(localStorage)
@@ -215,35 +241,35 @@ export default function HistoryPage() {
   if (!isLoaded) {
     return (
       <main className="animate-fade-in min-h-screen tibo-page flex items-center justify-center px-6">
-        <p className="tibo-meta">Yükleniyor...</p>
+        <p className="tibo-meta">{t.loading}</p>
       </main>
     );
   }
 
   return (
     <main className="animate-fade-in min-h-screen tibo-page px-6 py-10 sm:py-12">
-      <div className="mx-auto max-w-[760px]">
+      <div className="mx-auto max-w-[920px]">
         <div className="mb-10 flex items-center justify-between">
           <Link
             href="/"
             className="tibo-meta hover:text-white transition-colors duration-200"
           >
-            ← Anasayfa
+            ← {t.home}
           </Link>
-          <p className="tibo-data tibo-meta">{days.length} oturum kaydı</p>
+          <p className="tibo-data tibo-meta">{days.length} {t.sessions}</p>
         </div>
 
         <header className="mb-8 border-b border-[var(--color-border-soft)] pb-6">
-          <h1 className="tibo-h1 mb-4 text-white">Geçmiş</h1>
-          <p className="tibo-body text-zinc-500">Görev, süre, sonuç.</p>
+          <h1 className="tibo-h1 mb-4 text-white">{t.title}</h1>
+          <p className="tibo-body text-zinc-500">{t.subtitle}</p>
         </header>
 
         {days.length === 0 ? (
           <div className="min-h-[45vh] flex flex-col items-center justify-center text-center">
-            <h2 className="tibo-section-title mb-4">Veri yok.</h2>
-            <p className="tibo-meta mb-6">Kutu bitir. Kayıt açılır.</p>
+            <h2 className="tibo-section-title mb-4">{t.empty}</h2>
+            <p className="tibo-meta mb-6">{t.emptySub}</p>
             <p className="tibo-body text-zinc-300 max-w-md">
-              Görev başlat. Çalış.
+              {t.emptyHint}
             </p>
           </div>
         ) : (
@@ -255,38 +281,40 @@ export default function HistoryPage() {
 	              const earlyClosedCount = getCompletedForPlannedBoxes(day.boxes, day.completed).filter(
 	                (completedBox) => !isReliableCompletedBox(completedBox),
 	              ).length;
-	              const totalActualMinutes = Math.round(
+		              const totalActualMinutes = Math.round(
 	                completedForDay.reduce(
 	                  (sum, item) => sum + (resolveActualSeconds(item) / 60),
 	                  0,
 	                ),
-	              );
-	              const completedLabel = plannedCount > 0 ? `${completedCount} / ${plannedCount}` : '—';
+		              );
+                  const totalPlannedMinutes = completedForDay.reduce((sum, item) => sum + item.plannedDuration, 0);
+                  const varianceMinutes = totalActualMinutes - totalPlannedMinutes;
+		              const completedLabel = plannedCount > 0 ? `${completedCount} / ${plannedCount}` : '—';
               const primaryGoal = day.ritual && !day.ritual.skipped ? day.ritual.primaryGoal : null;
+              const mainTask = primaryGoal?.trim() || day.boxes[0]?.title || '—';
 
               return (
                 <article
                   key={day.dateKey}
-                  className="tibo-card p-4 transition-colors duration-150 hover:border-zinc-700/80 sm:p-5"
+	                  className="tibo-card p-4 transition-colors duration-150 hover:border-zinc-700/80 hover:bg-[rgba(13,18,26,0.72)] sm:p-5"
                 >
                   <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <p className="tibo-data tibo-meta mb-2 text-zinc-700">{day.dateKey}</p>
-                      <h2 className="tibo-section-title truncate text-zinc-100">
-                        {formatDateLong(day.date)}
-                      </h2>
-                      <p className="tibo-body mt-2 truncate capitalize text-zinc-500">
-                        {primaryGoal ?? '—'}
-                      </p>
-                    </div>
-                    <div className="grid shrink-0 grid-cols-1 gap-4 text-left sm:grid-cols-2 sm:gap-6 sm:text-right">
-	                      <HistoryMetric
-	                        label="Tamamlanan"
-	                        value={completedLabel}
-	                        hint={earlyClosedCount > 0 ? `${earlyClosedCount} erken` : undefined}
-	                      />
-	                      <HistoryMetric label="Odak Süresi" value={totalActualMinutes > 0 ? formatMinutes(totalActualMinutes) : '—'} />
-                    </div>
+                      <p className="tibo-data tibo-meta mb-2 text-zinc-600">{day.dateKey}</p>
+                      <h2 className="tibo-section-title text-zinc-100">{mainTask}</h2>
+                      <p className="tibo-meta mt-2 text-zinc-500">{formatDateLong(day.date, language)}</p>
+                      <p className="tibo-label mt-3 mb-1">{t.task}</p>
+                      <p className="tibo-body capitalize text-zinc-400">{mainTask}</p>
+	                    </div>
+	                    <div className="grid shrink-0 grid-cols-1 gap-4 text-left sm:grid-cols-3 sm:gap-6 sm:text-right">
+		                      <HistoryMetric
+		                        label={t.completed}
+		                        value={completedLabel}
+		                        hint={earlyClosedCount > 0 ? `${earlyClosedCount} ${t.early}` : undefined}
+		                      />
+		                      <HistoryMetric label={t.focusTime} value={totalActualMinutes > 0 ? formatMinutes(totalActualMinutes) : '—'} />
+                          <HistoryMetric label={t.variance} value={completedCount > 0 ? formatSignedMinutes(varianceMinutes) : '—'} />
+	                    </div>
                   </div>
                 </article>
               );

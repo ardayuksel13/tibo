@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -806,6 +806,16 @@ button:disabled {
   padding: 0 92px 0 var(--tibo-control-padding-x);
 }
 
+.tibo-ref-main-input input:-webkit-autofill,
+.tibo-ref-main-input input:-webkit-autofill:hover,
+.tibo-ref-main-input input:-webkit-autofill:focus,
+.tibo-ref-main-input input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-text-primary);
+  caret-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px rgba(4, 8, 13, 0.58) inset;
+  box-shadow: 0 0 0 1000px rgba(4, 8, 13, 0.58) inset;
+}
+
 .tibo-ref-main-input input::placeholder,
 .tibo-ref-mini-panel textarea::placeholder {
   color: rgba(244, 241, 234, 0.42);
@@ -1305,5 +1315,2198 @@ button:disabled {
   .tibo-ref-topbar button {
     height: 40px;
     padding: 0 14px;
+  }
+}
+
+/* --- TiBo unified reference overrides --- */
+:root {
+  --color-background: #05090f;
+  --color-focus-background: #05090f;
+  --color-surface: rgba(8, 12, 18, 0.74);
+  --color-surface-hover: rgba(13, 19, 27, 0.82);
+  --color-border: rgba(137, 147, 167, 0.22);
+  --color-border-soft: rgba(137, 147, 167, 0.12);
+  --color-border-strong: rgba(178, 185, 255, 0.38);
+  --color-text-primary: #e7e9ee;
+  --color-text-secondary: rgba(220, 224, 238, 0.68);
+  --color-text-muted: rgba(184, 190, 206, 0.54);
+  --color-primary: #b5bcff;
+  --color-primary-hover: #c8cdff;
+  --color-primary-line: rgba(181, 188, 255, 0.44);
+  --color-danger: #ff8f88;
+  --color-danger-hover: #ff7e76;
+  --tibo-bg-cinematic:
+    radial-gradient(circle at 50% 26%, rgba(45, 62, 98, 0.28), transparent 42rem),
+    linear-gradient(rgba(86, 98, 124, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(86, 98, 124, 0.1) 1px, transparent 1px),
+    linear-gradient(180deg, #05090f 0%, #050a11 62%, #04080e 100%);
+  --tibo-title-tracking: -0.045em;
+  --tibo-title-line: 0.92;
+  --tibo-control-height: 3.5rem;
+}
+
+body {
+  background: var(--tibo-bg-cinematic);
+  background-size: auto, 130px 130px, 130px 130px, auto;
+}
+
+.tibo-page,
+.tibo-focus-page,
+.tibo-ref-page {
+  background: var(--tibo-bg-cinematic);
+  background-size: auto, 130px 130px, 130px 130px, auto;
+}
+
+.tibo-h1,
+.tibo-screen-title {
+  font-size: clamp(2.6rem, 5.2vw, 4.8rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+}
+
+.tibo-screen-title {
+  font-size: clamp(2.4rem, 4.8vw, 4.2rem);
+}
+
+.tibo-section-title {
+  font-size: clamp(1.9rem, 3vw, 3rem);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+
+.tibo-input {
+  border-color: var(--color-border);
+  background: rgba(5, 10, 15, 0.58);
+}
+
+.tibo-input:focus,
+.tibo-input:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: inset 2px 0 0 var(--color-primary), 0 0 0 1px rgba(181, 188, 255, 0.14);
+}
+
+.tibo-primary {
+  background: var(--color-primary);
+  color: #050910;
+  border: 1px solid rgba(181, 188, 255, 0.74);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+}
+
+.tibo-primary:hover {
+  background: var(--color-primary-hover);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.34);
+}
+
+.tibo-primary:disabled {
+  background: rgba(115, 124, 145, 0.28);
+  border-color: rgba(115, 124, 145, 0.42);
+  color: rgba(224, 228, 240, 0.46);
+}
+
+.tibo-secondary {
+  border-color: var(--color-border);
+  background: rgba(5, 10, 15, 0.52);
+}
+
+.tibo-ref-shell {
+  grid-template-columns: 300px minmax(0, 1fr);
+}
+
+.tibo-ref-sidebar {
+  background: rgba(6, 10, 15, 0.76);
+  border-right: 1px solid var(--color-border-soft);
+  padding: 40px 44px 34px;
+}
+
+.tibo-ref-logo {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+}
+
+.tibo-ref-nav {
+  margin-top: 74px;
+  gap: 28px;
+}
+
+.tibo-ref-nav-item {
+  justify-content: space-between;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(228, 232, 243, 0.74);
+}
+
+.tibo-ref-nav-item.is-active {
+  color: var(--color-text-primary);
+}
+
+.tibo-ref-nav-item i {
+  width: 12px;
+  height: 12px;
+  box-shadow: none;
+}
+
+.tibo-ref-nav-icon {
+  display: none;
+}
+
+.tibo-ref-sidebar-lower {
+  gap: 18px;
+}
+
+.tibo-ref-storage {
+  color: rgba(188, 194, 208, 0.7);
+  font-size: 14px;
+  gap: 12px;
+}
+
+.tibo-ref-storage i {
+  display: none;
+}
+
+.tibo-ref-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(184, 190, 206, 0.28);
+  background: rgba(4, 8, 13, 0.8);
+  color: #f3f4f7;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.tibo-ref-main {
+  padding: 36px 40px 40px 44px;
+}
+
+.tibo-ref-topbar {
+  font-size: 14px;
+  letter-spacing: 0.12em;
+}
+
+.tibo-ref-topbar button {
+  height: 46px;
+  font-size: 14px;
+  padding: 0 18px;
+}
+
+.tibo-ref-content-grid {
+  grid-template-columns: minmax(0, 980px) 260px;
+  gap: 40px;
+  margin-top: 44px;
+}
+
+.tibo-ref-hero {
+  font-size: clamp(4.2rem, 5.8vw, 6.2rem);
+  line-height: 0.88;
+  letter-spacing: -0.06em;
+  max-width: 820px;
+}
+
+.tibo-ref-hero-block p {
+  font-size: 14px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: rgba(184, 190, 206, 0.58);
+}
+
+.tibo-ref-task-section {
+  margin-top: 34px;
+}
+
+.tibo-ref-task-section label,
+.tibo-ref-focus-block h2,
+.tibo-ref-focus-block label,
+.tibo-ref-mini-panel h2,
+.tibo-ref-right-rail h2 {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.tibo-ref-main-input {
+  margin-top: 20px;
+}
+
+.tibo-ref-main-input input {
+  height: 72px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  padding-left: 18px;
+  padding-right: 94px;
+}
+
+.tibo-ref-main-input span {
+  right: 14px;
+  bottom: 20px;
+  font-size: 12px;
+}
+
+.tibo-ref-muted-line {
+  font-size: 13px;
+}
+
+.tibo-ref-form-grid {
+  grid-template-columns: 250px 1fr 1fr;
+  gap: 34px;
+  margin-top: 22px;
+}
+
+.tibo-ref-focus-block {
+  border-right: 1px solid rgba(137, 147, 167, 0.34);
+  padding-right: 42px;
+}
+
+.tibo-ref-time-input {
+  height: 72px;
+  padding: 0 16px;
+}
+
+.tibo-ref-time-input input {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.tibo-ref-focus-block p {
+  font-size: 12px;
+}
+
+.tibo-ref-mini-panel {
+  min-height: 210px;
+  padding: 16px;
+}
+
+.tibo-ref-mini-panel h2 {
+  top: -24px;
+}
+
+.tibo-ref-mini-panel textarea {
+  min-height: 132px;
+  font-size: 18px;
+  line-height: 1.32;
+}
+
+.tibo-ref-mini-panel > span {
+  right: 14px;
+  bottom: 10px;
+  font-size: 12px;
+}
+
+.tibo-ref-blue-cta {
+  height: 74px;
+  margin-top: 24px;
+  border-color: rgba(181, 188, 255, 0.64);
+  background: var(--color-primary);
+  color: #050910;
+  box-shadow: none;
+}
+
+.tibo-ref-blue-cta span {
+  color: rgba(5, 9, 16, 0.64);
+  font-size: 12px;
+}
+
+.tibo-ref-blue-cta strong {
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.tibo-ref-blue-cta svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tibo-ref-right-rail {
+  border-left: 1px solid var(--color-border-soft);
+  padding-left: 40px;
+  opacity: 1;
+}
+
+.tibo-ref-right-rail dl {
+  gap: 16px;
+}
+
+.tibo-ref-right-rail dt {
+  font-size: 10px;
+}
+
+.tibo-ref-right-rail dd {
+  font-size: 12px;
+}
+
+.tibo-ref-focus-score-line span {
+  font-size: 10px;
+}
+
+.tibo-ref-focus-score strong {
+  font-size: 11px;
+}
+
+.tibo-ref-focus-note {
+  font-size: 10px;
+  margin-top: 14px;
+}
+
+.tibo-ref-bars {
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.tibo-ref-bars span {
+  width: 6px;
+}
+
+.tibo-ref-system-note,
+.tibo-ref-system-footer {
+  display: none;
+}
+
+.tibo-ritual-shell {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 24px 56px 42px;
+}
+
+.tibo-ritual-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 66px;
+}
+
+.tibo-ritual-top .tibo-ref-logo {
+  font-size: 42px;
+}
+
+.tibo-ritual-panel {
+  width: min(100%, 1280px);
+  border: 1px solid var(--color-border-soft);
+  background: rgba(5, 10, 15, 0.44);
+  margin: 0 auto;
+  padding: 48px 56px 50px;
+}
+
+.tibo-ritual-panel .tibo-screen-title {
+  font-size: clamp(3.6rem, 5.2vw, 5.2rem);
+}
+
+.tibo-ritual-panel .tibo-section-title {
+  font-size: clamp(2.1rem, 3.4vw, 3.2rem);
+}
+
+.tibo-ritual-panel .tibo-body {
+  font-size: 14px;
+}
+
+.tibo-ritual-panel .tibo-meta {
+  font-size: 12px;
+}
+
+.tibo-ritual-panel .tibo-input {
+  height: 66px;
+  font-size: 24px;
+  padding: 0 18px;
+}
+
+.tibo-ritual-panel .tibo-primary {
+  height: 72px;
+  font-size: 22px;
+}
+
+.tibo-focus-page .tibo-operation-timer {
+  font-size: clamp(5rem, 16vw, 12rem);
+  letter-spacing: -0.05em;
+  line-height: 0.82;
+}
+
+.tibo-focus-page .tibo-label {
+  font-size: 14px;
+}
+
+.tibo-focus-page .tibo-secondary,
+.tibo-focus-page .tibo-primary,
+.tibo-focus-page .tibo-focus-action {
+  height: 56px;
+}
+
+.tibo-abandon-shell .tibo-h1,
+.tibo-bridge-shell .tibo-screen-title,
+.tibo-closeout-shell .tibo-h1 {
+  font-size: clamp(4rem, 6vw, 7rem);
+}
+
+.tibo-abandon-shell,
+.tibo-bridge-shell {
+  padding: 0 14px;
+}
+
+.tibo-abandon-shell .tibo-body,
+.tibo-bridge-shell .tibo-body {
+  font-size: 16px;
+}
+
+.tibo-abandon-shell .tibo-meta,
+.tibo-bridge-shell .tibo-meta {
+  font-size: 12px;
+}
+
+.tibo-abandon-shell .tibo-input,
+.tibo-bridge-shell .tibo-input {
+  height: 58px;
+  font-size: 18px;
+}
+
+.tibo-abandon-shell button[role="radio"],
+.tibo-abandon-shell .reason-item {
+  height: 96px;
+}
+
+.tibo-closeout-shell .tibo-body,
+.tibo-closeout-shell .tibo-meta,
+.tibo-closeout-shell .tibo-label {
+  font-size: 12px;
+}
+
+.tibo-closeout-shell .tibo-data {
+  font-size: clamp(2.2rem, 4vw, 3.8rem);
+}
+
+@media (max-width: 1440px) {
+  .tibo-ref-shell {
+    grid-template-columns: 238px minmax(0, 1fr);
+  }
+
+  .tibo-ref-sidebar {
+    padding: 28px 24px 24px;
+  }
+
+  .tibo-ref-logo {
+    font-size: 42px;
+  }
+
+  .tibo-ref-nav {
+    margin-top: 58px;
+    gap: 30px;
+  }
+
+  .tibo-ref-nav-item {
+    font-size: 24px;
+  }
+
+  .tibo-ref-storage {
+    margin-top: 20px;
+    font-size: 16px;
+    gap: 10px;
+  }
+
+  .tibo-ref-node {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .tibo-ref-topbar {
+    font-size: 14px;
+  }
+
+  .tibo-ref-topbar button {
+    height: 48px;
+    font-size: 16px;
+    padding: 0 16px;
+  }
+
+  .tibo-ref-content-grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 28px;
+    margin-top: 44px;
+  }
+
+  .tibo-ref-hero {
+    font-size: clamp(4.2rem, 6.1vw, 6rem);
+    max-width: 760px;
+  }
+
+  .tibo-ref-hero-block p {
+    margin-top: 10px;
+    font-size: 16px;
+  }
+
+  .tibo-ref-task-section label,
+  .tibo-ref-focus-block h2,
+  .tibo-ref-focus-block label,
+  .tibo-ref-mini-panel h2,
+  .tibo-ref-right-rail h2 {
+    font-size: 13px;
+  }
+
+  .tibo-ref-main-input input {
+    height: 78px;
+    font-size: 28px;
+    padding-left: 18px;
+    padding-right: 70px;
+  }
+
+  .tibo-ref-main-input span {
+    font-size: 14px;
+    right: 14px;
+    bottom: 26px;
+  }
+
+  .tibo-ref-muted-line {
+    font-size: 13px;
+  }
+
+  .tibo-ref-time-input {
+    height: 78px;
+  }
+
+  .tibo-ref-time-input input {
+    font-size: 26px;
+  }
+
+  .tibo-ref-mini-panel {
+    min-height: 220px;
+    padding: 14px;
+  }
+
+  .tibo-ref-mini-panel textarea {
+    min-height: 130px;
+    font-size: 15px;
+  }
+
+  .tibo-ref-mini-panel > span {
+    font-size: 13px;
+  }
+
+  .tibo-ref-blue-cta {
+    height: 74px;
+    margin-top: 18px;
+  }
+
+  .tibo-ref-blue-cta span {
+    font-size: 12px;
+  }
+
+  .tibo-ref-blue-cta strong {
+    font-size: 32px;
+  }
+
+  .tibo-ref-right-rail dt {
+    font-size: 11px;
+  }
+
+  .tibo-ref-right-rail dd {
+    font-size: 14px;
+  }
+
+  .tibo-ref-focus-score-line span {
+    font-size: 11px;
+  }
+
+  .tibo-ref-focus-score strong {
+    font-size: 13px;
+  }
+
+  .tibo-ref-focus-note {
+    font-size: 11px;
+  }
+
+  .tibo-ritual-shell {
+    padding: 20px 24px 34px;
+  }
+
+  .tibo-ritual-top .tibo-ref-logo {
+    font-size: 38px;
+  }
+
+  .tibo-ritual-panel {
+    width: min(100%, 1100px);
+    padding: 36px 36px 42px;
+  }
+
+  .tibo-ritual-panel .tibo-screen-title {
+    font-size: clamp(3.5rem, 7vw, 5.6rem);
+  }
+
+  .tibo-ritual-panel .tibo-section-title {
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+  }
+
+  .tibo-ritual-panel .tibo-body {
+    font-size: 16px;
+  }
+
+  .tibo-ritual-panel .tibo-meta {
+    font-size: 14px;
+  }
+
+  .tibo-ritual-panel .tibo-input {
+    height: 72px;
+    font-size: 24px;
+  }
+
+  .tibo-ritual-panel .tibo-primary {
+    height: 76px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 1366px) {
+  .tibo-ref-shell {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+
+  .tibo-ref-sidebar {
+    padding: 22px 16px 18px;
+  }
+
+  .tibo-ref-logo {
+    font-size: 34px;
+  }
+
+  .tibo-ref-nav {
+    margin-top: 42px;
+    gap: 22px;
+  }
+
+  .tibo-ref-nav-item {
+    font-size: 14px;
+    letter-spacing: 0.1em;
+  }
+
+  .tibo-ref-nav-item i {
+    width: 8px;
+    height: 8px;
+  }
+
+  .tibo-ref-storage {
+    margin-top: 14px;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .tibo-ref-node {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .tibo-ref-main {
+    padding: 24px 20px 28px;
+  }
+
+  .tibo-ref-topbar {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+
+  .tibo-ref-topbar button {
+    height: 42px;
+    font-size: 12px;
+    padding: 0 14px;
+    gap: 8px;
+  }
+
+  .tibo-ref-content-grid {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 20px;
+    margin-top: 30px;
+  }
+
+  .tibo-ref-hero {
+    font-size: clamp(2.7rem, 5.4vw, 4.3rem);
+    line-height: 0.92;
+    max-width: 560px;
+  }
+
+  .tibo-ref-hero-block p {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .tibo-ref-task-section {
+    margin-top: 32px;
+  }
+
+  .tibo-ref-task-section label,
+  .tibo-ref-focus-block h2,
+  .tibo-ref-focus-block label,
+  .tibo-ref-mini-panel h2,
+  .tibo-ref-right-rail h2 {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+
+  .tibo-ref-main-input input {
+    height: 60px;
+    font-size: 26px;
+    padding-left: 14px;
+    padding-right: 58px;
+  }
+
+  .tibo-ref-main-input span {
+    font-size: 12px;
+    right: 12px;
+    bottom: 20px;
+  }
+
+  .tibo-ref-muted-line,
+  .tibo-ref-error {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .tibo-ref-form-grid {
+    grid-template-columns: 190px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .tibo-ref-focus-block {
+    padding-right: 18px;
+  }
+
+  .tibo-ref-time-input {
+    height: 60px;
+    padding: 0 12px;
+  }
+
+  .tibo-ref-time-input input {
+    font-size: 24px;
+  }
+
+  .tibo-ref-focus-block p {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .tibo-ref-mini-panel {
+    min-height: 170px;
+    padding: 10px;
+  }
+
+  .tibo-ref-mini-panel h2 {
+    top: -26px;
+  }
+
+  .tibo-ref-mini-panel textarea {
+    min-height: 102px;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .tibo-ref-mini-panel > span {
+    right: 10px;
+    bottom: 8px;
+    font-size: 11px;
+  }
+
+  .tibo-ref-blue-cta {
+    height: 60px;
+    margin-top: 12px;
+  }
+
+  .tibo-ref-blue-cta span {
+    font-size: 11px;
+    padding-left: 16px;
+  }
+
+  .tibo-ref-blue-cta strong {
+    font-size: 18px;
+    letter-spacing: -0.01em;
+  }
+
+  .tibo-ref-blue-cta svg {
+    width: 22px;
+    height: 22px;
+    margin-right: 16px;
+  }
+
+  .tibo-ref-right-rail {
+    padding-left: 18px;
+  }
+
+  .tibo-ref-right-rail section + section {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  .tibo-ref-right-rail dl {
+    margin-top: 8px;
+    gap: 6px;
+  }
+
+  .tibo-ref-right-rail dt {
+    font-size: 10px;
+  }
+
+  .tibo-ref-right-rail dd {
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .tibo-ref-focus-score-line span {
+    font-size: 10px;
+  }
+
+  .tibo-ref-focus-score strong {
+    font-size: 10px;
+  }
+
+  .tibo-ref-focus-note {
+    margin-top: 6px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tibo-ref-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .tibo-ref-sidebar {
+    height: auto;
+    position: static;
+    border-bottom: 1px solid var(--color-border-soft);
+    border-right: 0;
+  }
+
+  .tibo-ref-nav {
+    margin-top: 28px;
+    flex-direction: row;
+    gap: 22px;
+  }
+
+  .tibo-ref-nav::after,
+  .tibo-ref-sidebar-lower::before {
+    display: none;
+  }
+
+  .tibo-ref-nav-item {
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .tibo-ref-node {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+
+  .tibo-ref-main {
+    padding: 22px 14px 34px;
+  }
+
+  .tibo-ref-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .tibo-ref-content-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .tibo-ref-right-rail {
+    border-left: 0;
+    border-top: 1px solid var(--color-border-soft);
+    padding-left: 0;
+    padding-top: 18px;
+  }
+
+  .tibo-ref-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tibo-ref-focus-block {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .tibo-ref-mini-panel h2 {
+    position: static;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 767px) {
+  .tibo-ref-sidebar {
+    padding: 12px 10px 10px;
+  }
+
+  .tibo-ref-logo {
+    font-size: 28px;
+  }
+
+  .tibo-ref-nav {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tibo-ref-nav-item {
+    justify-content: center;
+    border: 1px solid var(--color-border-soft);
+    padding: 8px 6px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .tibo-ref-nav-item i {
+    display: none;
+  }
+
+  .tibo-ref-storage {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .tibo-ref-node {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .tibo-ref-main {
+    padding: 12px 10px 18px;
+  }
+
+  .tibo-ref-topbar {
+    gap: 10px;
+    font-size: 10px;
+  }
+
+  .tibo-ref-topbar > div {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .tibo-ref-topbar button {
+    height: 36px;
+    font-size: 11px;
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .tibo-ref-content-grid {
+    margin-top: 12px;
+    gap: 16px;
+  }
+
+  .tibo-ref-hero {
+    font-size: clamp(1.95rem, 10vw, 2.7rem);
+    line-height: 0.95;
+    max-width: 100%;
+  }
+
+  .tibo-ref-hero-block p {
+    font-size: 10px;
+    letter-spacing: 0.09em;
+  }
+
+  .tibo-ref-task-section {
+    margin-top: 14px;
+  }
+
+  .tibo-ref-task-section label,
+  .tibo-ref-focus-block h2,
+  .tibo-ref-focus-block label,
+  .tibo-ref-mini-panel h2,
+  .tibo-ref-right-rail h2 {
+    font-size: 10px;
+  }
+
+  .tibo-ref-main-input input {
+    height: 50px;
+    font-size: 17px;
+    padding-left: 12px;
+    padding-right: 48px;
+  }
+
+  .tibo-ref-main-input span {
+    right: 8px;
+    bottom: 16px;
+    font-size: 10px;
+  }
+
+  .tibo-ref-muted-line,
+  .tibo-ref-error,
+  .tibo-ref-focus-block p {
+    font-size: 11px;
+  }
+
+  .tibo-ref-time-input {
+    height: 50px;
+    padding: 0 10px;
+  }
+
+  .tibo-ref-time-input input {
+    font-size: 17px;
+  }
+
+  .tibo-ref-mini-panel {
+    min-height: 124px;
+    padding: 8px;
+  }
+
+  .tibo-ref-mini-panel textarea {
+    min-height: 70px;
+    font-size: 11px;
+  }
+
+  .tibo-ref-mini-panel > span {
+    right: 8px;
+    bottom: 6px;
+    font-size: 10px;
+  }
+
+  .tibo-ref-blue-cta {
+    height: 52px;
+    margin-top: 10px;
+    grid-template-columns: 1fr;
+    padding: 0 10px;
+  }
+
+  .tibo-ref-blue-cta span,
+  .tibo-ref-blue-cta svg {
+    display: none;
+  }
+
+  .tibo-ref-blue-cta strong {
+    font-size: 14px;
+  }
+
+  .tibo-ref-right-rail {
+    gap: 10px;
+    padding-top: 12px;
+  }
+
+  .tibo-ref-right-rail dt,
+  .tibo-ref-right-rail dd,
+  .tibo-ref-focus-score-line span,
+  .tibo-ref-focus-score strong,
+  .tibo-ref-focus-note {
+    font-size: 10px;
+  }
+}
+
+/* === TiBo Protocol Unified Design (Reference Sync) === */
+:root {
+  --color-background: #121414;
+  --color-focus-background: #0c0f0f;
+  --color-surface: #121414;
+  --color-surface-hover: #1a1c1c;
+  --color-border: rgba(226, 226, 226, 0.13);
+  --color-border-soft: rgba(226, 226, 226, 0.08);
+  --color-border-strong: rgba(226, 226, 226, 0.22);
+  --color-text-primary: #e2e2e2;
+  --color-text-secondary: #c3c5d9;
+  --color-text-muted: rgba(195, 197, 217, 0.72);
+  --color-primary: #b7c4ff;
+  --color-primary-hover: #c7d1ff;
+  --color-primary-line: rgba(183, 196, 255, 0.44);
+  --color-danger: #ffb4ab;
+  --color-danger-hover: #ffdad6;
+  --tibo-bg-cinematic:
+    radial-gradient(circle at 50% 34%, rgba(183, 196, 255, 0.08), rgba(18, 20, 20, 0) 46%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    #0c0f0f;
+  --tibo-title-tracking: -0.04em;
+  --tibo-title-line: 0.94;
+  --tibo-control-height: 3.75rem;
+}
+
+body {
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--tibo-bg-cinematic);
+  background-size: auto, 48px 48px, 48px 48px, auto;
+}
+
+.tibo-page,
+.tibo-focus-page,
+.tibo-ref-page {
+  background: var(--tibo-bg-cinematic);
+  background-size: auto, 48px 48px, 48px 48px, auto;
+  color: var(--color-text-primary);
+}
+
+.tibo-h1,
+.tibo-screen-title,
+.tibo-ref-hero {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.94;
+}
+
+.tibo-h1 {
+  font-size: clamp(2.8rem, 5.4vw, 4.8rem);
+}
+
+.tibo-screen-title {
+  font-size: clamp(2.4rem, 4.8vw, 4rem);
+}
+
+.tibo-section-title {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.tibo-label {
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.tibo-body {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.tibo-meta {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.tibo-input,
+.tibo-ref-main-input,
+.tibo-ref-time-input,
+.tibo-ref-mini-panel,
+.tibo-card,
+.tibo-metric-card {
+  background: rgba(11, 14, 19, 0.9);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.tibo-input {
+  border-radius: 0.25rem;
+}
+
+.tibo-input:focus,
+.tibo-ref-main-input:focus-within,
+.tibo-ref-time-input:focus-within,
+.tibo-ref-mini-panel:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px rgba(183, 196, 255, 0.16);
+}
+
+.tibo-primary,
+.tibo-ref-blue-cta {
+  background: var(--color-primary);
+  color: #121414;
+  border: 1px solid rgba(183, 196, 255, 0.7);
+  box-shadow: none;
+}
+
+.tibo-primary:hover,
+.tibo-ref-blue-cta:hover {
+  background: var(--color-primary-hover);
+}
+
+.tibo-secondary {
+  background: rgba(11, 14, 19, 0.9);
+  border: 1px solid rgba(226, 226, 226, 0.2);
+  color: var(--color-text-primary);
+}
+
+.tibo-ref-shell {
+  grid-template-columns: 290px minmax(0, 1fr);
+}
+
+.tibo-ref-sidebar {
+  border-right: 1px solid var(--color-border);
+  background: rgba(18, 20, 20, 0.88);
+  padding: 30px 24px;
+}
+
+.tibo-ref-logo {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.tibo-ref-nav {
+  margin-top: 46px;
+  gap: 18px;
+}
+
+.tibo-ref-nav-item {
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 31px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(226, 226, 226, 0.72);
+}
+
+.tibo-ref-nav-item.is-active,
+.tibo-ref-nav-item:hover {
+  color: var(--color-primary);
+}
+
+.tibo-ref-main {
+  padding: 36px 40px 42px;
+}
+
+.tibo-ref-topbar {
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+
+.tibo-ref-topbar button {
+  height: 44px;
+  border: 1px solid var(--color-border);
+  background: rgba(11, 14, 19, 0.9);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 16px;
+}
+
+.tibo-ref-content-grid {
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 32px;
+  margin-top: 30px;
+}
+
+.tibo-ref-hero {
+  font-size: clamp(4rem, 5.8vw, 6rem);
+  max-width: 760px;
+}
+
+.tibo-ref-hero-block p {
+  margin-top: 12px;
+  font-size: 42px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.tibo-ref-task-section {
+  margin-top: 34px;
+}
+
+.tibo-ref-task-section label,
+.tibo-ref-focus-block h2,
+.tibo-ref-focus-block label,
+.tibo-ref-mini-panel h2,
+.tibo-ref-right-rail h2 {
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+}
+
+.tibo-ref-main-input input {
+  height: 68px;
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tibo-ref-main-input span {
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+}
+
+.tibo-ref-muted-line {
+  font-size: 14px;
+}
+
+.tibo-ref-form-grid {
+  grid-template-columns: 230px 1fr 1fr;
+  gap: 24px;
+}
+
+.tibo-ref-time-input {
+  height: 60px;
+}
+
+.tibo-ref-time-input input {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 32px;
+}
+
+.tibo-ref-mini-panel {
+  min-height: 196px;
+  padding: 14px;
+}
+
+.tibo-ref-mini-panel h2 {
+  top: -24px;
+}
+
+.tibo-ref-mini-panel textarea {
+  min-height: 122px;
+  font-size: 32px;
+  color: var(--color-text-secondary);
+}
+
+.tibo-ref-blue-cta {
+  height: 74px;
+}
+
+.tibo-ref-blue-cta strong {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.tibo-ref-right-rail {
+  border-left: 1px solid var(--color-border);
+  padding-left: 18px;
+}
+
+.tibo-ref-right-rail dt {
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.tibo-ref-right-rail dd {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+
+.tibo-ref-right-rail dd.is-blue {
+  color: var(--color-primary);
+}
+
+.tibo-ref-right-rail dd.is-danger {
+  color: #ffb4ab;
+}
+
+.tibo-ref-focus-note,
+.tibo-ref-focus-score-line span,
+.tibo-ref-focus-score strong {
+  font-size: 12px;
+}
+
+.tibo-ritual-shell {
+  max-width: 1680px;
+  padding: 24px 56px 40px;
+}
+
+.tibo-ritual-top {
+  margin-bottom: 42px;
+}
+
+.tibo-ritual-panel {
+  width: min(100%, 980px);
+  padding: 42px 46px 40px;
+  border: 1px solid var(--color-border);
+  background: rgba(11, 14, 19, 0.9);
+}
+
+.tibo-ritual-panel .tibo-screen-title {
+  font-size: clamp(3.6rem, 5vw, 5rem);
+  line-height: 0.94;
+}
+
+.tibo-ritual-panel .tibo-section-title {
+  font-size: clamp(2.4rem, 3.8vw, 3.4rem);
+  line-height: 0.98;
+}
+
+.tibo-ritual-panel .tibo-body {
+  font-size: 17px;
+}
+
+.tibo-ritual-panel .tibo-meta {
+  font-size: 15px;
+}
+
+.tibo-ritual-panel .tibo-input {
+  height: 76px;
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 28px;
+  padding-inline: 18px;
+}
+
+.tibo-ritual-panel .tibo-primary {
+  height: 78px;
+  font-size: 24px;
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+}
+
+.tibo-ritual-top .tibo-ref-logo {
+  font-size: 62px;
+}
+
+.tibo-ritual-top .tibo-label {
+  color: rgba(226, 226, 226, 0.72);
+}
+
+.tibo-ritual-top select {
+  height: 70px !important;
+  min-width: 106px;
+  font-size: 24px !important;
+  letter-spacing: 0.08em !important;
+  padding-inline: 18px;
+  border: 1px solid var(--color-border) !important;
+  background: rgba(11, 14, 19, 0.9) !important;
+}
+
+.tibo-focus-page .tibo-operation-timer {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(6rem, 14vw, 11rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+.tibo-closeout-shell,
+.tibo-bridge-shell,
+.tibo-abandon-shell {
+  max-width: 1080px;
+}
+
+@media (max-width: 1366px) {
+  .tibo-ref-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .tibo-ref-nav-item {
+    font-size: 14px;
+    letter-spacing: 0.08em;
+  }
+  .tibo-ref-hero {
+    font-size: clamp(3rem, 5vw, 4.4rem);
+  }
+  .tibo-ref-hero-block p {
+    font-size: 13px;
+  }
+  .tibo-ref-main-input input {
+    font-size: 28px;
+    height: 60px;
+  }
+  .tibo-ref-mini-panel textarea {
+    font-size: 16px;
+  }
+  .tibo-ritual-panel .tibo-screen-title {
+    font-size: clamp(2.9rem, 5vw, 4.2rem);
+  }
+  .tibo-ritual-panel .tibo-input {
+    font-size: 24px;
+    height: 64px;
+  }
+  .tibo-ritual-panel .tibo-primary {
+    font-size: 22px;
+    height: 68px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tibo-ref-shell {
+    grid-template-columns: 1fr;
+  }
+  .tibo-ref-sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .tibo-ref-nav {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .tibo-ref-nav-item {
+    font-size: 11px;
+    border: 1px solid var(--color-border-soft);
+    padding: 8px 6px;
+    justify-content: center;
+  }
+  .tibo-ref-nav-item i {
+    display: none;
+  }
+  .tibo-ref-main {
+    padding: 16px 12px 22px;
+  }
+  .tibo-ref-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 11px;
+  }
+  .tibo-ref-content-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 16px;
+  }
+  .tibo-ref-hero {
+    font-size: clamp(2.3rem, 8vw, 3.3rem);
+  }
+  .tibo-ref-task-section {
+    margin-top: 16px;
+  }
+  .tibo-ref-form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .tibo-ref-focus-block {
+    border-right: 0;
+    padding-right: 0;
+  }
+  .tibo-ref-main-input input {
+    font-size: 18px;
+    height: 54px;
+  }
+  .tibo-ref-time-input,
+  .tibo-ref-time-input input {
+    height: 52px;
+    font-size: 18px;
+  }
+  .tibo-ref-mini-panel {
+    min-height: 130px;
+  }
+  .tibo-ref-mini-panel h2 {
+    position: static;
+    margin-bottom: 8px;
+  }
+  .tibo-ref-mini-panel textarea {
+    min-height: 72px;
+    font-size: 12px;
+  }
+  .tibo-ref-blue-cta {
+    height: 54px;
+    grid-template-columns: 1fr;
+    padding: 0 12px;
+  }
+  .tibo-ref-blue-cta span,
+  .tibo-ref-blue-cta svg {
+    display: none;
+  }
+  .tibo-ref-blue-cta strong {
+    font-size: 16px;
+  }
+  .tibo-ref-right-rail {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+    padding-left: 0;
+    padding-top: 12px;
+  }
+}
+
+/* Morning ritual compact scale */
+.tibo-ritual-compact .tibo-ritual-shell {
+  max-width: 1460px;
+  padding: 18px 40px 30px;
+}
+
+.tibo-ritual-compact .tibo-ritual-top {
+  margin-bottom: 28px;
+}
+
+.tibo-ritual-compact .tibo-ritual-top .tibo-ref-logo {
+  font-size: 52px;
+}
+
+.tibo-ritual-compact .tibo-ritual-top .tibo-label {
+  font-size: 11px;
+}
+
+.tibo-ritual-compact .tibo-ritual-top select {
+  height: 56px !important;
+  min-width: 88px;
+  font-size: 18px !important;
+  padding-inline: 14px;
+}
+
+.tibo-ritual-compact .tibo-ritual-panel {
+  width: min(100%, 860px);
+  padding: 34px 36px 34px;
+}
+
+.tibo-ritual-compact .tibo-ritual-panel .tibo-screen-title {
+  font-size: clamp(2.8rem, 4.1vw, 3.9rem);
+  line-height: 0.96;
+}
+
+.tibo-ritual-compact .tibo-ritual-panel .tibo-section-title {
+  font-size: clamp(1.8rem, 2.9vw, 2.55rem);
+  line-height: 1.02;
+}
+
+.tibo-ritual-compact .tibo-ritual-panel .tibo-body {
+  font-size: 15px;
+}
+
+.tibo-ritual-compact .tibo-ritual-panel .tibo-meta {
+  font-size: 13px;
+}
+
+.tibo-ritual-compact .tibo-ritual-panel .tibo-input {
+  height: 60px;
+  font-size: 22px;
+  padding-inline: 15px;
+}
+
+.tibo-ritual-compact .tibo-ritual-panel .tibo-primary {
+  height: 62px;
+  font-size: 20px;
+}
+
+@media (max-width: 1366px) {
+  .tibo-ritual-compact .tibo-ritual-shell {
+    padding: 16px 24px 26px;
+  }
+
+  .tibo-ritual-compact .tibo-ritual-top .tibo-ref-logo {
+    font-size: 42px;
+  }
+
+  .tibo-ritual-compact .tibo-ritual-top select {
+    height: 50px !important;
+    font-size: 16px !important;
+  }
+
+  .tibo-ritual-compact .tibo-ritual-panel {
+    width: min(100%, 780px);
+    padding: 30px 28px;
+  }
+
+  .tibo-ritual-compact .tibo-ritual-panel .tibo-screen-title {
+    font-size: clamp(2.3rem, 4.8vw, 3.3rem);
+  }
+
+  .tibo-ritual-compact .tibo-ritual-panel .tibo-section-title {
+    font-size: clamp(1.55rem, 3vw, 2.15rem);
+  }
+
+  .tibo-ritual-compact .tibo-ritual-panel .tibo-input {
+    height: 54px;
+    font-size: 19px;
+  }
+
+  .tibo-ritual-compact .tibo-ritual-panel .tibo-primary {
+    height: 56px;
+    font-size: 18px;
+  }
+}
+
+/* TiBo refinement pass: keep system style, improve contrast/spacing consistency */
+:root {
+  --color-primary: #6f86a3;
+  --color-primary-hover: #526b88;
+  --color-primary-soft: rgba(111, 134, 163, 0.18);
+  --color-primary-line: rgba(142, 163, 189, 0.5);
+}
+
+.tibo-page,
+.tibo-focus-page,
+.tibo-ref-page {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.024) 1px, transparent 1px),
+    var(--tibo-bg-cinematic);
+  background-size: 44px 44px, 44px 44px, auto;
+  background-position: 0 0, 0 0, center;
+}
+
+.tibo-input::placeholder,
+.tibo-ref-main-input input::placeholder,
+.tibo-ref-mini-panel textarea::placeholder {
+  color: rgba(244, 241, 234, 0.56);
+}
+
+.tibo-label {
+  color: rgba(244, 241, 234, 0.68);
+}
+
+.tibo-meta {
+  color: rgba(244, 241, 234, 0.56);
+}
+
+.tibo-primary,
+.tibo-ref-blue-cta {
+  background: #647d9a;
+  border: 1px solid rgba(174, 191, 212, 0.35);
+  color: #f8fafc;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 1px rgba(6, 10, 16, 0.24);
+}
+
+.tibo-primary:hover,
+.tibo-ref-blue-cta:hover {
+  background: #526b88;
+  border-color: rgba(174, 191, 212, 0.42);
+}
+
+.tibo-primary:active,
+.tibo-ref-blue-cta:active {
+  background: #485f7a;
+}
+
+.tibo-primary:focus-visible,
+.tibo-ref-blue-cta:focus-visible {
+  outline: 2px solid #8ea3bd;
+  outline-offset: 2px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 3px rgba(111, 134, 163, 0.14);
+}
+
+.tibo-primary:disabled,
+.tibo-ref-blue-cta.is-locked {
+  opacity: 0.8;
+  border-color: rgba(148, 163, 184, 0.24);
+  background: linear-gradient(180deg, rgba(52, 67, 86, 0.92), rgba(44, 58, 76, 0.94));
+  color: rgba(226, 232, 240, 0.56);
+}
+
+.tibo-ref-main-input:focus-within,
+.tibo-ref-time-input:focus-within,
+.tibo-ref-mini-panel:focus-within,
+.tibo-input:focus,
+.tibo-input:focus-visible {
+  border-color: #8ea3bd;
+  box-shadow: inset 2px 0 0 #6f86a3, 0 0 0 1px rgba(111, 134, 163, 0.18);
+}
+
+.tibo-ref-content-grid {
+  margin-top: 28px;
+}
+
+.tibo-ref-task-section {
+  margin-top: 18px;
+}
+
+.tibo-ref-form-grid {
+  margin-top: 16px;
+  gap: 24px;
+}
+
+.tibo-ref-main-input {
+  margin-top: 12px;
+}
+
+.tibo-ref-main {
+  padding-bottom: 34px;
+}
+
+.tibo-ref-blue-cta {
+  margin-top: 18px;
+}
+
+.tibo-ref-right-rail dt {
+  color: rgba(226, 232, 240, 0.64);
+}
+
+.tibo-ref-right-rail dd,
+.tibo-ref-focus-score strong {
+  color: rgba(248, 250, 252, 0.92);
+}
+
+.tibo-ref-focus-note,
+.tibo-ref-focus-score-line span {
+  color: rgba(226, 232, 240, 0.62);
+}
+
+.tibo-ref-logo {
+  letter-spacing: -0.04em;
+  font-weight: 760;
+}
+
+.tibo-ref-logo span,
+.tibo-ritual-top .tibo-ref-logo span {
+  color: var(--color-primary);
+}
+
+.tibo-ref-nav-item {
+  color: rgba(244, 241, 234, 0.64);
+}
+
+.tibo-ref-nav-item.is-active {
+  color: rgba(248, 250, 252, 0.96);
+}
+
+.tibo-ref-nav-item.is-active i {
+  background: var(--color-primary);
+}
+
+.tibo-abandon-shell button[role="radio"],
+.tibo-abandon-shell .reason-item {
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+.tibo-closeout-shell .tibo-data.tibo-meta {
+  font-size: 12px;
+  opacity: 0.72;
+}
+
+.tibo-closeout-shell section {
+  border-color: rgba(148, 163, 184, 0.14) !important;
+}
+
+.tibo-closeout-shell .tibo-section-title {
+  font-size: clamp(1.55rem, 2.2vw, 2rem);
+}
+
+.tibo-closeout-shell .tibo-body {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.tibo-closeout-shell .tibo-primary + button,
+.tibo-closeout-shell .tibo-primary + .tibo-secondary {
+  color: rgba(226, 232, 240, 0.68);
+}
+
+.tibo-closeout-shell .tibo-primary + button:hover,
+.tibo-closeout-shell .tibo-primary + .tibo-secondary:hover {
+  color: rgba(248, 250, 252, 0.9);
+}
+
+.tibo-time-grid-shell,
+.tibo-empty-grid {
+  background:
+    linear-gradient(rgba(148, 163, 184, 0.022) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(9, 13, 19, 0.45), rgba(5, 8, 13, 0.5));
+}
+
+/* Final polish: keep TiBo structure, refine density and hierarchy */
+.tibo-ref-content-grid {
+  margin-top: 24px;
+  gap: 30px;
+}
+
+.tibo-ref-task-section {
+  margin-top: 14px;
+}
+
+.tibo-ref-main {
+  padding-bottom: 42px;
+}
+
+.tibo-ref-main-input {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(7, 12, 18, 0.66);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  margin-top: 10px;
+}
+
+.tibo-ref-main-input input {
+  height: 66px;
+  font-size: 19px;
+  font-weight: 660;
+  letter-spacing: -0.012em;
+  padding-left: 16px;
+  padding-right: 84px;
+}
+
+.tibo-ref-main-input span {
+  right: 12px;
+  bottom: 13px;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.44);
+}
+
+.tibo-ref-form-grid {
+  margin-top: 18px;
+  gap: 28px;
+}
+
+.tibo-ref-focus-block {
+  padding-right: 34px;
+  border-right: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.tibo-ref-time-input {
+  height: 66px;
+  padding: 0 14px;
+}
+
+.tibo-ref-time-input input {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.tibo-ref-focus-block p {
+  margin-top: 8px;
+}
+
+.tibo-ref-mini-panel {
+  min-height: 170px;
+  padding: 12px 13px 28px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(11, 16, 23, 0.5);
+}
+
+.tibo-ref-mini-panel h2 {
+  top: -21px;
+}
+
+.tibo-ref-mini-panel textarea {
+  min-height: 102px;
+  font-size: 15px;
+  line-height: 1.32;
+  padding-top: 4px;
+}
+
+.tibo-ref-mini-panel > span {
+  right: 12px;
+  bottom: 8px;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.42);
+}
+
+.tibo-primary,
+.tibo-ref-blue-cta {
+  background: linear-gradient(180deg, #7f95ae 0%, #7890aa 54%, #647d9a 100%);
+  border: 1px solid rgba(174, 191, 212, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 14px 30px rgba(111, 134, 163, 0.1);
+}
+
+.tibo-primary:hover,
+.tibo-ref-blue-cta:hover {
+  background: linear-gradient(180deg, #869cb4 0%, #7e95ad 54%, #6d86a2 100%);
+}
+
+.tibo-ref-blue-cta {
+  height: 68px;
+  margin-top: 16px;
+}
+
+.tibo-ref-blue-cta span {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(248, 250, 252, 0.5);
+}
+
+.tibo-ref-blue-cta strong {
+  font-size: 16px;
+  font-weight: 640;
+  letter-spacing: 0.005em;
+}
+
+.tibo-ref-blue-cta svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.82;
+  stroke-width: 1.55;
+}
+
+.tibo-ref-right-rail {
+  padding-left: 24px;
+}
+
+.tibo-ref-right-rail section + section {
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.tibo-ref-right-rail dl {
+  gap: 10px;
+}
+
+.tibo-ref-right-rail dl div {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.tibo-ref-right-rail dt {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.tibo-ref-right-rail dd {
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  color: rgba(248, 250, 252, 0.94);
+}
+
+.tibo-ref-focus-score-line span {
+  font-size: 11px;
+}
+
+.tibo-ref-focus-score strong {
+  font-size: 14px;
+}
+
+.tibo-ref-bars {
+  margin-top: 14px;
+  gap: 8px;
+}
+
+.tibo-ref-bars span {
+  width: 5px;
+  opacity: 0.74;
+  background: rgba(142, 163, 189, 0.46);
+}
+
+.tibo-ref-bars span.is-active {
+  opacity: 1;
+  background: rgba(154, 174, 199, 0.95);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.tibo-ref-page {
+  overflow-x: clip;
+}
+
+/* Final UI polish layer */
+.tibo-ref-shell {
+  grid-template-columns: 250px minmax(0, 1fr);
+}
+
+.tibo-ref-sidebar {
+  padding: 24px 18px;
+  border-right-color: rgba(148, 163, 184, 0.14);
+}
+
+.tibo-ref-nav-item {
+  letter-spacing: 0.07em;
+}
+
+.tibo-ref-nav-item.is-active {
+  color: rgba(248, 250, 252, 0.94);
+}
+
+.tibo-ref-storage span {
+  color: rgba(226, 232, 240, 0.48);
+}
+
+.tibo-ref-node {
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+.tibo-ref-hero {
+  max-width: 760px;
+}
+
+.tibo-ref-hero-block p {
+  color: rgba(226, 232, 240, 0.62);
+  font-size: 13px;
+}
+
+.tibo-ref-task-section label,
+.tibo-ref-focus-block h2,
+.tibo-ref-focus-block label,
+.tibo-ref-mini-panel h2,
+.tibo-ref-right-rail h2 {
+  letter-spacing: 0.1em;
+}
+
+.tibo-ref-main-input input::placeholder,
+.tibo-ref-mini-panel textarea::placeholder {
+  color: rgba(226, 232, 240, 0.48);
+}
+
+.tibo-ref-time-input input::-webkit-outer-spin-button,
+.tibo-ref-time-input input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.tibo-ref-time-input input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.tibo-ref-time-input svg {
+  color: rgba(226, 232, 240, 0.48);
+}
+
+.tibo-ref-right-rail {
+  border-left-color: rgba(148, 163, 184, 0.14);
+}
+
+.tibo-ref-focus-note {
+  margin-top: 10px;
+}
+
+.tibo-primary:disabled,
+.tibo-ref-blue-cta.is-locked,
+button[disabled].tibo-primary {
+  cursor: not-allowed;
+  opacity: 0.46;
+  color: rgba(226, 232, 240, 0.4);
+  border-color: rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(47, 59, 75, 0.9), rgba(38, 48, 64, 0.92));
+  box-shadow: none;
+}
+
+.tibo-closeout-shell .tibo-h1 {
+  margin-bottom: 10px;
+}
+
+.tibo-closeout-shell .tibo-data.tibo-meta {
+  font-size: 11px;
+  opacity: 0.66;
+  letter-spacing: 0.03em;
+}
+
+.tibo-closeout-shell .tibo-card,
+.tibo-closeout-shell section {
+  background: rgba(8, 12, 18, 0.46);
+}
+
+.tibo-closeout-shell .tibo-primary {
+  min-width: 180px;
+}
+
+.tibo-ref-main-input:focus-within,
+.tibo-ref-time-input:focus-within,
+.tibo-ref-mini-panel:focus-within,
+.tibo-input:focus,
+.tibo-input:focus-visible {
+  border-color: rgba(120, 144, 170, 0.7);
+  box-shadow: 0 0 0 1px rgba(120, 144, 170, 0.2);
+}
+
+@media (max-width: 1280px) {
+  .tibo-ref-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .tibo-ref-content-grid {
+    grid-template-columns: minmax(0, 1fr) 230px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tibo-ref-right-rail {
+    border-left: 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    padding-left: 0;
+    padding-top: 14px;
   }
 }

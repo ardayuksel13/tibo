@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { toPng } from 'html-to-image';
-import { Check, Download, Pause, Play, X } from 'lucide-react';
+import { Check, Download, Pause, Play } from 'lucide-react';
 import { Button, Input, Label, TimerDisplay } from '../components/ui';
 import { trackEvent } from '../lib/analytics';
+import { tf, useLanguage } from '../lib/i18n';
 
 type Box = {
   id: string;
@@ -45,17 +46,12 @@ type MorningRitual = {
   skipped?: boolean;
 };
 
-type BreakReason = 'Odak kaybettim' | 'Yanlış görev' | 'Acil durum' | 'Diğer';
+type BreakReason = 'lost_focus' | 'wrong_task' | 'urgent' | 'other';
 type CompletionType = 'completed' | 'early_exit';
 const ACTIVE_SESSION_KEY = 'tibo-active-session';
 const LATEST_NEXT_STEP_KEY = 'tibo-next-step-latest';
 const NEXT_STEP_HISTORY_KEY = 'tibo-next-step-history';
 
-const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-const MONTHS = [
-  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
-];
 
 function getTodayStamp(): string {
   const today = new Date();
@@ -114,10 +110,10 @@ function formatTimer(seconds: number): string {
 function formatMinutes(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  if (hours > 0 && remainingMinutes > 0) return `${hours}s ${remainingMinutes}dk`;
-  if (hours > 0) return `${hours}s`;
-  if (remainingMinutes > 0) return `${remainingMinutes}dk`;
-  return '0dk';
+  if (hours > 0 && remainingMinutes > 0) return `${hours}h ${remainingMinutes}m`;
+  if (hours > 0) return `${hours}h`;
+  if (remainingMinutes > 0) return `${remainingMinutes}m`;
+  return '0m';
 }
 
 function shouldUseSecondPrecision(plannedSeconds: number, actualSeconds = plannedSeconds): boolean {
@@ -132,14 +128,14 @@ function formatDurationSeconds(seconds: number, useSecondPrecision: boolean): st
 
   const minutes = Math.floor(safeSeconds / 60);
   const remainingSeconds = safeSeconds % 60;
-  if (minutes > 0 && remainingSeconds > 0) return `${minutes}dk ${remainingSeconds}sn`;
-  if (minutes > 0) return `${minutes}dk`;
-  return `${remainingSeconds}sn`;
+  if (minutes > 0 && remainingSeconds > 0) return `${minutes}m ${remainingSeconds}s`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${remainingSeconds}s`;
 }
 
 function formatSignedDurationSeconds(seconds: number, useSecondPrecision: boolean): string {
   const roundedSeconds = Math.round(seconds);
-  if (roundedSeconds === 0) return useSecondPrecision ? '0sn' : '0dk';
+  if (roundedSeconds === 0) return useSecondPrecision ? '0s' : '0m';
   const sign = roundedSeconds > 0 ? '+' : '-';
   return `${sign}${formatDurationSeconds(Math.abs(roundedSeconds), useSecondPrecision)}`;
 }
@@ -187,9 +183,13 @@ function resolveActualSeconds(completedBox: CompletedBox): number {
   return 0;
 }
 
-function getTodayLabel(): string {
-  const today = new Date();
-  return `${today.getDate()} ${MONTHS[today.getMonth()]} ${today.getFullYear()} ${DAYS[today.getDay()]}`;
+function getTodayLabel(language: 'tr' | 'en'): string {
+  return new Intl.DateTimeFormat(language === 'tr' ? 'tr-TR' : 'en-US', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    weekday: 'long',
+  }).format(new Date());
 }
 
 function readTodaysCompletedBoxes(): CompletedBox[] {
@@ -226,6 +226,7 @@ type NextStepRecord = {
 };
 
 export default function FocusPage() {
+  const { language } = useLanguage('en');
   const [isLoaded, setIsLoaded] = useState(false);
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -245,20 +246,60 @@ export default function FocusPage() {
   const pauseDurationMsRef = useRef(0);
   const recordedBoxIdsRef = useRef<Set<string>>(new Set());
   const [isPreparingImage, setIsPreparingImage] = useState(false);
-  const [isNotesDetailOpen, setIsNotesDetailOpen] = useState(false);
-  const [idleSeconds, setIdleSeconds] = useState(0);
-  const [showIdlePauseModal, setShowIdlePauseModal] = useState(false);
   const [isEarlyExitPrompt, setIsEarlyExitPrompt] = useState(false);
   const [earlyReason, setEarlyReason] = useState<BreakReason | ''>('');
   const [earlyOther, setEarlyOther] = useState('');
   const [earlyExitError, setEarlyExitError] = useState('');
   const [earlyExitSaved, setEarlyExitSaved] = useState(false);
   const [pendingEarlyBox, setPendingEarlyBox] = useState<Box | null>(null);
-  const lastActivityMsRef = useRef<number>(Date.now());
   const [finishHoldProgress, setFinishHoldProgress] = useState(0);
   const finishHoldTimerRef = useRef<number | null>(null);
   const completionTrackedRef = useRef(false);
-  const isUiDimmed = idleSeconds >= 5 && !isPaused && !showIdlePauseModal;
+  const t = {
+    loading: tf(language, 'Yükleniyor...', 'Loading...'),
+    firstTask: tf(language, 'İlk görevi yaz.', 'Write the first task.'),
+    newTask: tf(language, 'Yeni Görev', 'New Task'),
+    completed: tf(language, 'Görev tamam.', 'Task complete.'),
+    blockClosed: tf(language, 'Blok kapandı.', 'Block closed.'),
+    taskIncomplete: tf(language, 'Görev yarım kaldı.', 'Task left incomplete.'),
+    planApplied: tf(language, 'Planı uyguladın.', 'Plan executed.'),
+    blockCompleted: tf(language, 'Blok tamamlandı.', 'Block completed.'),
+    dataMissing: tf(language, 'Veri eksik.', 'Missing data.'),
+    tomorrowFix: tf(language, 'Yarın Düzelt', 'Fix Tomorrow'),
+    variance: tf(language, 'Sapma', 'Variance'),
+    earlyCloseCount: tf(language, 'Erken kapanan blok', 'Early closed blocks'),
+    box: tf(language, 'Kutu', 'Boxes'),
+    actualDuration: tf(language, 'Gerçek Süre', 'Actual Time'),
+    lastNote: tf(language, 'Son Not', 'Last Note'),
+    download: tf(language, 'Görsel Olarak İndir', 'Download Visual'),
+    endedBlock: tf(language, 'Biten blok', 'Ended block'),
+    continuation: tf(language, 'Devam noktası.', 'Continuation point.'),
+    continuationSub: tf(language, 'Bir sonraki blok buradan açılır.', 'Next block opens from here.'),
+    continuationPlaceholder: tf(language, 'Nereden devam edeceksin?', 'Where will you continue?'),
+    lockable: tf(language, 'Devam noktası kilitlenebilir.', 'Continuation point is lockable.'),
+    min5: tf(language, 'En az 5 karakter yaz.', 'Write at least 5 characters.'),
+    saveContinuation: tf(language, 'Devam Noktasını Kaydet', 'Save Continuation Point'),
+    youLeft: tf(language, 'Bıraktın.', 'You stopped.'),
+    why: tf(language, 'Neden?', 'Why?'),
+    whySub: tf(language, 'Sebebi kaydet. Bir sonraki blokta düzelt.', 'Save the reason. Fix it in the next block.'),
+    reasonPlaceholder: tf(language, 'Nedeni yaz', 'Write reason'),
+    noted: tf(language, 'Not edildi.', 'Logged.'),
+    saveReason: tf(language, 'Sebebi Kaydet', 'Save Reason'),
+    paused: tf(language, 'Duraklatıldı', 'Paused'),
+    pause: tf(language, 'Duraklat', 'Pause'),
+    resume: tf(language, 'Devam Et', 'Resume'),
+    holdToEnd: tf(language, 'Basılı Tutarak Sonlandır', 'Hold To End'),
+    endBlock: tf(language, 'Bloğu Sonlandır', 'End Block'),
+    exitLocked: tf(language, 'Çıkış kapalı', 'Exit locked'),
+    reasonPick: tf(language, 'Bir neden seç.', 'Pick a reason.'),
+    reasonOther: tf(language, 'Diğer için açıklama yaz.', 'Add details for Other.'),
+  };
+  const breakReasonOptions: Array<{ key: BreakReason; label: string }> = [
+    { key: 'lost_focus', label: tf(language, 'Odak kaybettim', 'Lost focus') },
+    { key: 'wrong_task', label: tf(language, 'Yanlış görev', 'Wrong task') },
+    { key: 'urgent', label: tf(language, 'Acil durum', 'Urgent issue') },
+    { key: 'other', label: tf(language, 'Diğer', 'Other') },
+  ];
 
   // Read today's boxes and ritual context when the focus screen opens.
   useEffect(() => {
@@ -442,11 +483,11 @@ export default function FocusPage() {
     if (!isLoaded || boxes.length === 0) {
       document.title = 'TiBo';
     } else if (isFinished) {
-      document.title = 'TiBo — Görev tamam';
+      document.title = `TiBo — ${t.completed}`;
     } else if (isPaused) {
-      document.title = 'TiBo — Duraklatıldı';
+      document.title = `TiBo — ${t.paused}`;
     } else if (isWritingNote) {
-      document.title = 'TiBo — Nerede kaldın?';
+      document.title = `TiBo — ${t.continuation}`;
     } else {
       const duration = formatTimer(remainingSeconds);
       const title = boxes[activeIndex]?.title ?? '';
@@ -455,47 +496,7 @@ export default function FocusPage() {
     return () => {
       document.title = 'TiBo';
     };
-  }, [isLoaded, boxes, activeIndex, remainingSeconds, isWritingNote, isFinished, isPaused]);
-
-  // Idle detection during active timer.
-  useEffect(() => {
-    if (!isLoaded || boxes.length === 0 || isFinished || isWritingNote || isPaused || isEarlyExitPrompt || showIdlePauseModal) return;
-
-    function markActivity() {
-      lastActivityMsRef.current = Date.now();
-      setIdleSeconds(0);
-    }
-
-    window.addEventListener('mousemove', markActivity);
-    window.addEventListener('mousedown', markActivity);
-    window.addEventListener('keydown', markActivity);
-    window.addEventListener('touchstart', markActivity);
-
-    const timer = window.setInterval(() => {
-      const idle = Math.floor((Date.now() - lastActivityMsRef.current) / 1000);
-      setIdleSeconds(idle);
-
-      if (idle >= 120 && !isPaused) {
-        setIsPaused(true);
-        setShowIdlePauseModal(true);
-      }
-    }, 1000);
-
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener('mousemove', markActivity);
-      window.removeEventListener('mousedown', markActivity);
-      window.removeEventListener('keydown', markActivity);
-      window.removeEventListener('touchstart', markActivity);
-    };
-  }, [isLoaded, boxes.length, isFinished, isWritingNote, isPaused, isEarlyExitPrompt, showIdlePauseModal]);
-
-  function resumeAfterIdlePause() {
-    lastActivityMsRef.current = Date.now();
-    setIdleSeconds(0);
-    setShowIdlePauseModal(false);
-    setIsPaused(false);
-  }
+  }, [isLoaded, boxes, activeIndex, remainingSeconds, isWritingNote, isFinished, isPaused, t.completed, t.paused, t.continuation]);
 
   function finishBoxAndAdvance(box: Box) {
     recordBoxCompletion(box);
@@ -513,7 +514,7 @@ export default function FocusPage() {
   function continueToNextBox() {
     const trimmedNote = noteText.trim();
     if (trimmedNote.length < 5) {
-      setNoteError('En az 5 karakter yaz.');
+      setNoteError(t.min5);
       return;
     }
 
@@ -585,11 +586,11 @@ export default function FocusPage() {
   function submitEarlyExitReason() {
     if (!pendingEarlyBox) return;
     if (!earlyReason) {
-      setEarlyExitError('Bir neden seç.');
+      setEarlyExitError(t.reasonPick);
       return;
     }
-    if (earlyReason === 'Diğer' && earlyOther.trim().length < 3) {
-      setEarlyExitError('Diğer için açıklama yaz.');
+    if (earlyReason === 'other' && earlyOther.trim().length < 3) {
+      setEarlyExitError(t.reasonOther);
       return;
     }
 
@@ -597,7 +598,7 @@ export default function FocusPage() {
       boxId: pendingEarlyBox.id,
       boxTitle: pendingEarlyBox.title,
       reason: earlyReason,
-      other: earlyReason === 'Diğer' ? earlyOther.trim() : null,
+      other: earlyReason === 'other' ? earlyOther.trim() : null,
       remainingSeconds,
       createdAt: new Date().toISOString(),
       date: getTodayStamp(),
@@ -610,7 +611,7 @@ export default function FocusPage() {
       localStorage.setItem(key, JSON.stringify([...list, reasonPayload]));
       trackEvent('break_reason_submitted', {
         reason: earlyReason,
-        hasOther: earlyReason === 'Diğer',
+        hasOther: earlyReason === 'other',
         boxTitle: pendingEarlyBox.title,
       });
       trackEvent('session_abandoned', {
@@ -684,7 +685,7 @@ export default function FocusPage() {
         backgroundColor: '#000000',
       });
       const link = document.createElement('a');
-      link.download = `tibo-brifing-${getTodayLabel().replace(/\s/g, '-')}.png`;
+      link.download = `tibo-briefing-${getTodayLabel(language).replace(/\s/g, '-')}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -706,7 +707,7 @@ export default function FocusPage() {
   if (!isLoaded) {
     return (
       <main className="animate-fade-in min-h-screen tibo-focus-page flex items-center justify-center">
-        <p className="tibo-meta">Yükleniyor...</p>
+        <p className="tibo-meta">{t.loading}</p>
       </main>
     );
   }
@@ -715,13 +716,13 @@ export default function FocusPage() {
     return (
       <main className="animate-fade-in min-h-screen tibo-focus-page flex flex-col items-center justify-center gap-8 px-6 text-center">
         <p className="tibo-body text-zinc-400">
-          İlk görevi yaz.
+          {t.firstTask}
         </p>
         <Link
           href="/"
           className="tibo-primary inline-flex h-14 w-full items-center justify-center px-6 text-sm font-semibold transition-all duration-150 sm:w-auto"
         >
-          Yeni Görev
+          {t.newTask}
         </Link>
       </main>
     );
@@ -822,52 +823,52 @@ export default function FocusPage() {
     const noteCount = notesWithContent.length;
     const previewNotes = notesWithContent.slice(0, 1);
 	    const completionRatio = boxes.length > 0 ? completedCount / boxes.length : 0;
-	    const briefingTitle = earlyClosedCount > 0 ? 'Blok kapandı.' : 'Görev tamam.';
+	    const briefingTitle = earlyClosedCount > 0 ? t.blockClosed : t.completed;
 	    const correctionText =
 	      earlyClosedCount > 0
-	        ? 'Görev yarım kaldı.'
+	        ? t.taskIncomplete
 	        : completionRatio >= 1 && isWithinTolerance
-	          ? 'Planı uyguladın.'
+	          ? t.planApplied
 	          : completedCount > 0
-	            ? 'Blok tamamlandı.'
-	            : 'Veri eksik.';
+	            ? t.blockCompleted
+	            : t.dataMissing;
 
     return (
       <>
         {/* Visible briefing screen */}
-        <main className="animate-fade-in min-h-screen tibo-page px-6 py-10 sm:py-12">
-          <div className="mx-auto max-w-[760px]">
+        <main className="animate-fade-in min-h-screen tibo-page tibo-closeout-screen px-6 py-10 sm:py-12">
+          <div className="mx-auto max-w-[1240px] tibo-closeout-shell">
             <h1 className="tibo-h1 mb-3">{briefingTitle}</h1>
-            <p className="tibo-data tibo-meta mb-7">{getTodayLabel()}</p>
+            <p className="tibo-data tibo-meta mb-7">{getTodayLabel(language)}</p>
 
-            <section className="mb-7 border-l-2 border-zinc-700 bg-[rgba(4,8,13,0.42)] px-5 py-5">
+            <section className="mb-7 border-l-2 border-zinc-700 bg-[rgba(4,8,13,0.42)] px-6 py-6">
 	              <p className="tibo-section-title text-zinc-100">{correctionText}</p>
               <div className="mt-4 flex items-center gap-2">
-                <Label className="text-zinc-600">Yarın Düzelt</Label>
+                <Label className="text-zinc-600">{t.tomorrowFix}</Label>
                 <span className="h-px flex-1 bg-zinc-900" />
               </div>
               <p className="tibo-meta mt-3 text-zinc-500">
-                Sapma: {varianceDisplay}.
+                {t.variance}: {varianceDisplay}.
               </p>
               {earlyClosedCount > 0 && (
                 <p className="tibo-meta mt-2 text-zinc-600">
-                  Erken kapanan blok: {earlyClosedCount}.
+                  {t.earlyCloseCount}: {earlyClosedCount}.
                 </p>
               )}
 	            </section>
 
             <section className="mb-7 grid grid-cols-1 border-y border-zinc-900 sm:grid-cols-3">
               <div className="py-4 sm:pr-4">
-                <Label className="mb-3 text-zinc-600">Kutu</Label>
-                <p className="tibo-data text-2xl font-bold text-zinc-100">{completedCount}/{boxes.length}</p>
+                <Label className="mb-3 text-zinc-600">{t.box}</Label>
+                <p className="tibo-data text-[1.35rem] font-bold text-zinc-100">{completedCount}/{boxes.length}</p>
               </div>
               <div className="border-t border-zinc-900 py-4 sm:border-l sm:border-t-0 sm:px-4">
-                <Label className="mb-3 text-zinc-600">Gerçek Süre</Label>
-                <p className="tibo-data text-2xl font-bold text-zinc-100">{actualDisplay}</p>
+                <Label className="mb-3 text-zinc-600">{t.actualDuration}</Label>
+                <p className="tibo-data text-[1.35rem] font-bold text-zinc-100">{actualDisplay}</p>
               </div>
               <div className="border-t border-zinc-900 py-4 sm:border-l sm:border-t-0 sm:pl-4">
-                <Label className="mb-3 text-zinc-600">Sapma</Label>
-                <p className={`tibo-data text-2xl font-bold ${hasCriticalVariance ? 'text-red-300' : 'text-zinc-100'}`}>
+                <Label className="mb-3 text-zinc-600">{t.variance}</Label>
+                <p className={`tibo-data break-words text-[1.35rem] font-bold ${hasCriticalVariance ? 'text-red-300' : 'text-zinc-100'}`}>
                   {varianceDisplay}
                 </p>
               </div>
@@ -875,37 +876,10 @@ export default function FocusPage() {
 
             {previewNotes.length > 0 && (
               <section className="mb-7">
-                <Label className="mb-3">Son Not</Label>
+                <Label className="mb-3">{t.lastNote}</Label>
                 <div className="border-l-2 border-[var(--color-primary)]/55 bg-[rgba(4,8,13,0.34)] px-4 py-4">
                   <p className="tibo-body max-h-[3rem] overflow-hidden text-zinc-300">{previewNotes[0].note}</p>
                 </div>
-                {noteCount > 1 && (
-                  <div className="mt-4 border border-[var(--color-border-soft)] bg-[var(--color-surface)]/35">
-                    <button
-                      type="button"
-                      onClick={() => setIsNotesDetailOpen((current) => !current)}
-                      className="flex w-full items-center justify-between px-4 py-3 text-left"
-                      aria-expanded={isNotesDetailOpen}
-                    >
-                      <Label>Detay</Label>
-                      <span className="tibo-meta text-zinc-600">
-                        {isNotesDetailOpen ? 'kapat' : `+${noteCount - 1} not`}
-                      </span>
-                    </button>
-                    {isNotesDetailOpen && (
-                      <div className="border-t border-[var(--color-border-soft)] px-4 py-4">
-                        <div className="space-y-3">
-                          {notesWithContent.slice(1).map((note) => (
-                            <div key={`${note.boxId}-${note.finishedAt}`} className="border-l border-zinc-800 pl-3">
-                              <p className="tibo-meta text-zinc-600 capitalize">{note.boxTitle}</p>
-                              <p className="tibo-body text-zinc-300">{note.note}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </section>
             )}
 
@@ -914,7 +888,7 @@ export default function FocusPage() {
                 href="/"
                 className="tibo-primary inline-flex h-14 w-full items-center justify-center px-6 text-sm font-semibold transition-all duration-150 sm:w-auto"
               >
-                Yeni Görev
+                {t.newTask}
               </Link>
               <Button
                 onClick={() => downloadBriefingImage()}
@@ -923,7 +897,7 @@ export default function FocusPage() {
                 className="h-10 w-full px-0 text-zinc-600 hover:text-zinc-300 sm:w-auto sm:px-4"
               >
                 <Download className="h-3.5 w-3.5" strokeWidth={1.75} />
-                Görsel Olarak İndir
+                {t.download}
               </Button>
             </div>
           </div>
@@ -964,7 +938,7 @@ export default function FocusPage() {
               TiBo
             </h1>
             <p style={{ fontSize: '20px', color: '#71717a' }}>
-              {getTodayLabel()}
+              {getTodayLabel(language)}
             </p>
           </div>
 
@@ -1080,17 +1054,17 @@ export default function FocusPage() {
     const trimmedNote = noteText.trim();
     const isNoteValid = trimmedNote.length >= 5;
     return (
-      <main className="animate-fade-in flex min-h-screen items-center px-6 py-12 text-white tibo-focus-page">
-        <div className="mx-auto grid w-full max-w-[680px] gap-7">
+      <main className="animate-fade-in flex min-h-screen items-center px-6 py-12 text-white tibo-focus-page tibo-bridge-screen">
+        <div className="mx-auto grid w-full max-w-[1120px] gap-7 tibo-bridge-shell">
           <div className="grid gap-4">
             <p className="tibo-meta text-zinc-600">
-              Biten blok: <span className="capitalize text-zinc-400">{activeBox.title}</span>
+              {t.endedBlock}: <span className="capitalize text-zinc-400">{activeBox.title}</span>
             </p>
-            <h2 className="tibo-screen-title max-w-[620px]">
-              Devam noktası.
+            <h2 className="tibo-screen-title max-w-[720px]">
+              {t.continuation}
             </h2>
             <p className="tibo-body max-w-[520px] text-zinc-500">
-              Bir sonraki blok buradan açılır.
+              {t.continuationSub}
             </p>
           </div>
 
@@ -1105,27 +1079,28 @@ export default function FocusPage() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') continueToNextBox();
               }}
-              placeholder="Nereden devam edeceksin?"
+              placeholder={t.continuationPlaceholder}
               maxLength={120}
+              spellCheck={false}
               className="w-full text-lg"
             />
             <div className="flex items-center justify-between gap-4">
               <p className="tibo-meta text-zinc-600">
-                {isNoteValid ? 'Devam noktası kilitlenebilir.' : 'En az 5 karakter yaz.'}
+                {isNoteValid ? t.lockable : t.min5}
               </p>
               <p className="tibo-meta text-zinc-700">{noteText.length}/120</p>
             </div>
             {noteError && <p className="tibo-meta mt-2 text-red-400">{noteError}</p>}
           </div>
 
-          <div>
+          <div className="pt-1">
             <Button
               onClick={continueToNextBox}
               size="lg"
               disabled={!isNoteValid}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto min-w-[320px]"
             >
-              Devam Noktasını Kaydet
+              {t.saveContinuation}
             </Button>
           </div>
         </div>
@@ -1134,66 +1109,67 @@ export default function FocusPage() {
   }
 
   if (isEarlyExitPrompt) {
-    const canSubmitEarlyExitReason = earlyReason !== null && (earlyReason !== 'Diğer' || earlyOther.trim().length > 0);
+    const canSubmitEarlyExitReason = earlyReason !== null && (earlyReason !== 'other' || earlyOther.trim().length > 0);
 
     return (
-      <main className="animate-fade-in flex min-h-screen items-center px-6 py-12 text-white tibo-focus-page">
-        <div className="mx-auto grid w-full max-w-[620px] gap-7">
+      <main className="animate-fade-in flex min-h-screen items-center px-6 py-12 text-white tibo-focus-page tibo-abandon-screen">
+        <div className="mx-auto grid w-full max-w-[1120px] gap-7 tibo-abandon-shell">
           <div className="grid gap-3">
-            <h2 className="tibo-h1">Bıraktın.</h2>
+            <h2 className="tibo-h1">{t.youLeft}</h2>
             <div className="grid gap-1">
-              <p className="tibo-body text-zinc-400">Neden?</p>
-              <p className="tibo-meta text-zinc-600">Sebebi kaydet. Bir sonraki blokta düzelt.</p>
+              <p className="tibo-body text-zinc-400">{t.why}</p>
+              <p className="tibo-meta text-zinc-600">{t.whySub}</p>
             </div>
           </div>
 
           <div className="grid gap-2">
-            {(['Odak kaybettim', 'Yanlış görev', 'Acil durum', 'Diğer'] as BreakReason[]).map((reason) => (
+            {breakReasonOptions.map((reason) => (
               <button
-                key={reason}
+                key={reason.key}
                 onClick={() => {
-                  setEarlyReason(reason);
+                  setEarlyReason(reason.key);
                   setEarlyExitError('');
                 }}
                 className={`group flex h-12 items-center gap-3 border px-4 text-left text-[13px] font-semibold uppercase tracking-[0.1em] transition-colors focus:outline-none ${
-                  earlyReason === reason
-                    ? 'border-[rgba(148,163,184,0.22)] bg-[rgba(4,8,13,0.72)] text-zinc-100'
-                    : 'border-[rgba(148,163,184,0.11)] bg-[rgba(255,255,255,0.012)] text-zinc-500 hover:border-[rgba(148,163,184,0.2)] hover:bg-[rgba(255,255,255,0.024)] hover:text-zinc-300'
+                  earlyReason === reason.key
+                    ? 'border-[var(--color-primary-line)] bg-[rgba(9,16,26,0.82)] text-zinc-100'
+                    : 'border-[rgba(148,163,184,0.14)] bg-[rgba(255,255,255,0.014)] text-zinc-300 hover:border-[rgba(148,163,184,0.24)] hover:bg-[rgba(255,255,255,0.03)] hover:text-zinc-100'
                 }`}
               >
                 <span
                   className={`h-5 w-[2px] shrink-0 transition-colors ${
-                    earlyReason === reason
-                      ? 'bg-[var(--color-primary)] shadow-[0_0_3px_rgba(22,132,255,0.13)]'
-                      : 'bg-zinc-800 group-hover:bg-zinc-700'
+                    earlyReason === reason.key
+                      ? 'bg-[var(--color-primary)]'
+                      : 'bg-zinc-700 group-hover:bg-zinc-500'
                   }`}
                 />
-                {reason}
+                {reason.label}
               </button>
             ))}
           </div>
 
-          {earlyReason === 'Diğer' && (
+          {earlyReason === 'other' && (
             <Input
               value={earlyOther}
               onChange={(e) => {
                 setEarlyOther(e.target.value.slice(0, 120));
                 if (earlyExitError) setEarlyExitError('');
               }}
-              placeholder="Nedeni yaz"
+              placeholder={t.reasonPlaceholder}
+              spellCheck={false}
               className="h-[var(--tibo-control-height)] w-full"
             />
           )}
           {earlyExitError && <p className="tibo-meta text-red-400">{earlyExitError}</p>}
-          {earlyExitSaved && <p className="tibo-meta text-zinc-300">Not edildi.</p>}
-          <div>
+          {earlyExitSaved && <p className="tibo-meta text-zinc-300">{t.noted}</p>}
+          <div className="pt-1">
             <Button
               onClick={submitEarlyExitReason}
               size="lg"
               disabled={!canSubmitEarlyExitReason}
-              className="w-full disabled:border-[rgba(148,163,184,0.12)] disabled:bg-[rgba(255,255,255,0.018)] disabled:text-zinc-700 sm:w-auto"
+              className="w-full disabled:border-[rgba(148,163,184,0.12)] disabled:bg-[rgba(255,255,255,0.018)] disabled:text-zinc-700 sm:w-auto min-w-[280px]"
             >
-              Sebebi Kaydet
+              {t.saveReason}
             </Button>
           </div>
         </div>
@@ -1206,22 +1182,13 @@ export default function FocusPage() {
 	    <main className="animate-fade-in relative flex min-h-screen flex-col overflow-hidden text-white tibo-focus-page">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(24,31,42,0.42),rgba(3,6,9,0)_46%)]" />
 
-      <div className={`relative z-10 flex items-center justify-center px-6 pt-6 transition-opacity duration-300 sm:px-8 ${isUiDimmed ? 'opacity-35' : 'opacity-100'}`}>
-        <span className="absolute left-6 text-zinc-800 sm:left-8" aria-label="Çıkış kapalı">
-          <X className="h-5 w-5" strokeWidth={1.75} />
-        </span>
-        <span className="tibo-data text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-700">
-          {activeIndex + 1}/{boxes.length}
-        </span>
-      </div>
-
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-10 sm:px-8">
-        <section className="grid w-full max-w-[980px] justify-items-center gap-8 text-center">
-          <div className={`grid justify-items-center gap-3 transition-opacity duration-300 ${isUiDimmed ? 'opacity-35' : 'opacity-100'}`}>
+        <section className="grid w-full max-w-[1180px] justify-items-center gap-8 text-center">
+          <div className="grid justify-items-center gap-3 transition-opacity duration-300">
             {isPaused && (
-              <p className="tibo-label text-zinc-600">Duraklatıldı</p>
+              <p className="tibo-label text-zinc-600">{t.paused}</p>
             )}
-            <h2 className="max-w-[760px] break-words text-[clamp(18px,2.1vw,28px)] font-bold leading-[1.16] text-[rgba(244,241,234,0.82)]">
+            <h2 className="max-w-[760px] break-words text-[clamp(20px,2.3vw,30px)] font-extrabold leading-[1.14] text-[rgba(244,241,234,0.92)]">
               <span className="capitalize">{activeBox.title}</span>
             </h2>
             {blockedItems.length > 0 && (
@@ -1244,7 +1211,7 @@ export default function FocusPage() {
             </TimerDisplay>
           </div>
 
-          <div className={`grid w-full max-w-[540px] grid-cols-1 gap-3 transition-opacity duration-300 sm:grid-cols-[1fr_1.25fr] ${isUiDimmed ? 'opacity-35' : 'opacity-100'}`}>
+          <div className="grid w-full max-w-[540px] grid-cols-1 gap-3 transition-opacity duration-300 sm:grid-cols-[1fr_1.25fr]">
             <Button
               onClick={() => setIsPaused(!isPaused)}
               variant="ghost"
@@ -1252,7 +1219,7 @@ export default function FocusPage() {
               className="h-14 w-full border border-[rgba(148,163,184,0.12)] bg-[rgba(255,255,255,0.015)] text-[12px] font-extrabold uppercase tracking-[0.14em] text-zinc-500 hover:border-zinc-700 hover:bg-[rgba(255,255,255,0.025)] hover:text-zinc-200"
             >
               {isPaused ? <Play className="h-4 w-4" strokeWidth={1.75} /> : <Pause className="h-4 w-4" strokeWidth={1.75} />}
-              {isPaused ? 'Devam Et' : 'Duraklat'}
+              {isPaused ? t.resume : t.pause}
             </Button>
             <Button
               variant="secondary"
@@ -1283,7 +1250,7 @@ export default function FocusPage() {
                 strokeWidth={1.75}
               />
               <span className={`relative transition-colors duration-150 ${finishHoldProgress > 0 ? 'text-red-200' : ''}`}>
-                {finishHoldProgress > 0.7 ? 'Bloğu Sonlandır' : 'Basılı Tutarak Sonlandır'}
+                {finishHoldProgress > 0.7 ? t.endBlock : t.holdToEnd}
               </span>
             </Button>
           </div>
@@ -1297,21 +1264,6 @@ export default function FocusPage() {
         />
       </div>
 
-      {idleSeconds >= 60 && !showIdlePauseModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20">
-          <p className="tibo-meta bg-zinc-950/80 px-4 py-2 text-zinc-300">Aktivite yok.</p>
-        </div>
-      )}
-
-      {showIdlePauseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-6">
-          <div className="w-full max-w-[420px] border border-zinc-800 bg-zinc-950 p-6">
-            <h3 className="tibo-section-title mb-2">Oturum durduruldu.</h3>
-            <p className="tibo-body mb-5 text-zinc-400">Aktivite algılanmadı.</p>
-            <Button onClick={resumeAfterIdlePause}>Odağa Dön</Button>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

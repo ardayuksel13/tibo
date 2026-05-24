@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Clock, RefreshCw } from 'lucide-react';
+import { ArrowRight, Clock, History, Lock, RefreshCw } from 'lucide-react';
 import { trackEvent } from './lib/analytics';
+import { useLanguage, tf } from './lib/i18n';
 
 type Box = {
   id: string;
@@ -41,15 +42,17 @@ type Note = {
 
 type CompletionType = 'completed' | 'early_exit';
 
-const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 const ACTIVE_SESSION_KEY = 'tibo-active-session';
 const LATEST_NEXT_STEP_KEY = 'tibo-next-step-latest';
 const NEXT_STEP_HISTORY_KEY = 'tibo-next-step-history';
 
-function getTodayLabel(): string {
-  const today = new Date();
-  return `${today.getDate()} ${MONTHS[today.getMonth()]} ${today.getFullYear()} ${DAYS[today.getDay()]}`;
+function getTodayLabel(language: 'tr' | 'en'): string {
+  return new Intl.DateTimeFormat(language === 'tr' ? 'tr-TR' : 'en-US', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    weekday: 'long',
+  }).format(new Date());
 }
 
 function getTodayStamp(): string {
@@ -110,10 +113,10 @@ function normalizeTaskTitle(title: string): string {
 function formatMinutes(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  if (hours > 0 && remainingMinutes > 0) return `${hours}s ${remainingMinutes}dk`;
-  if (hours > 0) return `${hours}s`;
-  if (remainingMinutes > 0) return `${remainingMinutes}dk`;
-  return '0dk';
+  if (hours > 0 && remainingMinutes > 0) return `${hours}h ${remainingMinutes}m`;
+  if (hours > 0) return `${hours}h`;
+  if (remainingMinutes > 0) return `${remainingMinutes}m`;
+  return '0m';
 }
 
 function shouldUseSecondPrecision(plannedSeconds: number, actualSeconds = plannedSeconds): boolean {
@@ -128,14 +131,14 @@ function formatDurationSeconds(seconds: number, useSecondPrecision: boolean): st
 
   const minutes = Math.floor(safeSeconds / 60);
   const remainingSeconds = safeSeconds % 60;
-  if (minutes > 0 && remainingSeconds > 0) return `${minutes}dk ${remainingSeconds}sn`;
-  if (minutes > 0) return `${minutes}dk`;
-  return `${remainingSeconds}sn`;
+  if (minutes > 0 && remainingSeconds > 0) return `${minutes}m ${remainingSeconds}s`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${remainingSeconds}s`;
 }
 
 function formatSignedDurationSeconds(seconds: number, useSecondPrecision: boolean): string {
   const roundedSeconds = Math.round(seconds);
-  if (roundedSeconds === 0) return useSecondPrecision ? '0sn' : '0dk';
+  if (roundedSeconds === 0) return useSecondPrecision ? '0s' : '0m';
   const sign = roundedSeconds > 0 ? '+' : '-';
   return `${sign}${formatDurationSeconds(Math.abs(roundedSeconds), useSecondPrecision)}`;
 }
@@ -293,6 +296,7 @@ function isValidCompletedBox(completedBox: CompletedBox): boolean {
 
 export default function HomePage() {
   const router = useRouter();
+  const { language } = useLanguage('en');
   const [boxes, setBoxes] = useState<Box[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -355,7 +359,7 @@ export default function HomePage() {
       const latest = normalizeTaskTitle(history[history.length - 1].text);
       const previous = normalizeTaskTitle(history[history.length - 2].text);
       if (latest.length >= 3 && latest === previous) {
-        setContinuationWarning('İlerleme yok.');
+        setContinuationWarning(tf(language, 'İlerleme yok.', 'No progress.'));
       } else {
         setContinuationWarning('');
       }
@@ -363,7 +367,7 @@ export default function HomePage() {
       const latest = normalizeTaskTitle(resumeNotes[0]);
       const previous = normalizeTaskTitle(resumeNotes[1]);
       if (latest.length >= 3 && latest === previous) {
-        setContinuationWarning('İlerleme yok.');
+        setContinuationWarning(tf(language, 'İlerleme yok.', 'No progress.'));
       } else {
         setContinuationWarning('');
       }
@@ -387,7 +391,7 @@ export default function HomePage() {
     }
 
     setIsLoaded(true);
-  }, [router]);
+  }, [router, language]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -408,11 +412,11 @@ export default function HomePage() {
     const typedDuration = rawDuration.trim().length > 0 ? Number(rawDuration) : NaN;
     const selectedDuration = parsedTask.durationFromCommand ?? Number(rawDuration);
 
-    if (!title) return 'Önce görevi tanımla.';
-    if (title.length < 3) return 'Önce görevi tanımla.';
-    if (isVagueTaskTitle(title)) return 'Önce görevi tanımla.';
-    if (parsedTask.durationFromCommand === null && !Number.isFinite(typedDuration)) return 'Önce süreyi seç.';
-    if (!Number.isFinite(selectedDuration) || selectedDuration <= 0) return 'Önce süreyi seç.';
+    if (!title) return tf(language, 'Önce görevi tanımla.', 'Define the task first.');
+    if (title.length < 3) return tf(language, 'Önce görevi tanımla.', 'Define the task first.');
+    if (isVagueTaskTitle(title)) return tf(language, 'Önce görevi tanımla.', 'Define the task first.');
+    if (parsedTask.durationFromCommand === null && !Number.isFinite(typedDuration)) return tf(language, 'Önce süreyi seç.', 'Set duration first.');
+    if (!Number.isFinite(selectedDuration) || selectedDuration <= 0) return tf(language, 'Önce süreyi seç.', 'Set duration first.');
     return null;
   }
 
@@ -436,7 +440,7 @@ export default function HomePage() {
 
   function startFocus() {
     if (hasActiveSessionLock) {
-      setFormError('Önce bunu bitir.');
+      setFormError(tf(language, 'Önce bunu bitir.', 'Finish current block first.'));
       triggerTaskShake();
       return;
     }
@@ -453,7 +457,7 @@ export default function HomePage() {
         router.push('/focus');
         return;
       }
-      setFormError('Önce görevi tanımla.');
+      setFormError(tf(language, 'Önce görevi tanımla.', 'Define the task first.'));
       triggerTaskShake();
       return;
     }
@@ -560,7 +564,7 @@ export default function HomePage() {
   const mainGoal = ritualIsActive ? morningRitual?.primaryGoal ?? '' : sortedBoxes[0]?.title ?? '';
   const obstacleText = blockedItems.join(', ');
   const focusScore = estimateAccuracy === null ? '—' : `%${estimateAccuracy}`;
-  const scoreLabel = `İsabet ${focusScore}`;
+  const scoreLabel = tf(language, `İsabet ${focusScore}`, `Accuracy ${focusScore}`);
   const activeFocusBars = estimateAccuracy === null ? 0 : Math.round((estimateAccuracy / 100) * 8);
   const rightCompletedLabel = plannedCount > 0 ? `${completedCount}/${plannedCount}` : '—';
   const rightTotalFocus = completedCount > 0
@@ -568,50 +572,91 @@ export default function HomePage() {
     : '—';
   const remainingCount = Math.max(0, plannedCount - completedCount);
   const hasPendingBoxes = remainingCount > 0;
-  const ctaLabel = hasPendingBoxes ? 'Sıradaki Göreve Devam Et' : 'Yeni Odak Bloğunu Başlat';
-  const taskSectionLabel = hasPendingBoxes ? 'YENİ GÖREV (İSTEĞE BAĞLI)' : 'SIRADAKİ GÖREV';
+  const ctaLabel = hasPendingBoxes
+    ? tf(language, 'Sıradaki Göreve Devam Et', 'Continue Next Task')
+    : tf(language, 'Yeni Odak Bloğunu Başlat', 'Start New Focus Block');
+  const taskSectionLabel = hasPendingBoxes
+    ? tf(language, 'YENİ GÖREV (İSTEĞE BAĞLI)', 'NEW TASK (OPTIONAL)')
+    : tf(language, 'SIRADAKİ GÖREV', 'NEXT TASK');
   const taskSectionHint = hasPendingBoxes
-    ? `${remainingCount} görev hazır. İstersen yeni görev ekle, istemezsen doğrudan devam et.`
-    : 'Şimdi yapacağın tek işi yaz ve süre ver.';
+    ? tf(
+      language,
+      `${remainingCount} görev hazır. İstersen yeni görev ekle, istemezsen doğrudan devam et.`,
+      `${remainingCount} task(s) ready. Add a new one or continue directly.`,
+    )
+    : tf(language, 'Şimdi yapacağın tek işi yaz ve süre ver.', 'Write one task and set its duration.');
+  const t = {
+    protocolName: tf(language, 'TiBo', 'TiBo'),
+    navTask: tf(language, 'GÖREV', 'TASK'),
+    navClosure: tf(language, 'KAPANIŞ', 'CLOSURE'),
+    navHistory: tf(language, 'GEÇMİŞ', 'HISTORY'),
+    localStorage: tf(language, 'Veriler bu cihazda saklanır.', 'Data stays on this device.'),
+    flow: tf(language, 'GÖREV AKIŞI', 'TASK FLOW'),
+    refresh: tf(language, 'AKIŞI YENİLE', 'RESET FLOW'),
+    hero: tf(language, 'Sıradaki görevi başlat', 'Start the next task'),
+    heroSub: tf(language, 'TEK İŞ. KISITLI SÜRE. NET SONUÇ.', 'ONE TASK. LIMITED TIME. CLEAR RESULT.'),
+    taskPlaceholder: tf(language, 'Sıradaki görevi yaz.', 'Write the next task.'),
+    taskAria: tf(language, 'Sıradaki görev', 'Next task'),
+    focusBlock: tf(language, 'ODAK BLOĞU', 'FOCUS BLOCK'),
+    duration: tf(language, 'SÜRE', 'DURATION'),
+    durationAria: tf(language, 'Süre dakika', 'Duration minutes'),
+    durationHint: tf(language, 'Süre tahmini: yalnızca bu görev için.', 'Duration estimate for this task only.'),
+    traps: tf(language, 'DİKKAT TUZAKLARI', 'FOCUS TRAPS'),
+    trapsPlaceholder: tf(language, 'Dikkatini dağıtabilecek şeyleri yaz.', 'Write potential distractions.'),
+    taskRule: tf(language, 'GÖREV KURALI', 'TASK RULE'),
+    taskRulePlaceholder: tf(language, 'Bu blokta neye odaklanıyorsun?', 'What is your focus in this block?'),
+    status: tf(language, 'GÖREV DURUMU', 'TASK STATUS'),
+    completedBox: tf(language, 'Tamamlanan Kutu', 'Completed Boxes'),
+    variance: tf(language, 'Sapma', 'Variance'),
+    totalFocus: tf(language, 'Toplam Odak', 'Total Focus'),
+    estimateVariance: tf(language, 'Tahmin sapması', 'Estimate variance'),
+    estimateHint: tf(language, 'Tahmin ile gerçek süre farkı.', 'Difference between estimate and actual time.'),
+    protocolData: tf(language, 'GÖREV DURUMU', 'TASK STATUS'),
+  };
 
   return (
     <main className="tibo-ref-page animate-fade-in">
       <div className="tibo-ref-shell">
         <aside className="tibo-ref-sidebar">
           <div>
-            <Link href="/" className="tibo-ref-logo" aria-label="TiBo ana sayfa">
-              TiBo<span>.</span>
-            </Link>
+            <div className="mb-12">
+              <Link href="/" className="tibo-ref-logo" aria-label="TiBo ana sayfa">
+                {t.protocolName}
+                <span>.</span>
+              </Link>
+            </div>
 
             <nav className="tibo-ref-nav" aria-label="TiBo bölümleri">
               <a href="#plan" className="tibo-ref-nav-item is-active">
-                <span>GÖREV</span>
+                <span>{t.navTask}</span>
                 <i />
               </a>
               <Link href="/focus?gunSonu=1" className="tibo-ref-nav-item">
-                KAPANIŞ
+                <Lock className="h-4 w-4 tibo-ref-nav-icon" strokeWidth={1.8} />
+                {t.navClosure}
               </Link>
               <Link href="/gecmis" className="tibo-ref-nav-item">
-                GEÇMİŞ
+                <History className="h-4 w-4 tibo-ref-nav-icon" strokeWidth={1.8} />
+                {t.navHistory}
               </Link>
             </nav>
           </div>
 
           <div className="tibo-ref-sidebar-lower">
             <div className="tibo-ref-storage">
-              <span>Veriler bu cihazda saklanır.</span>
-              <i />
+              <span>{t.localStorage}</span>
+              <div className="tibo-ref-node">N</div>
             </div>
           </div>
         </aside>
 
         <section className="tibo-ref-main">
           <header className="tibo-ref-topbar">
-            <p>GÖREV AKIŞI</p>
+            <p>{t.flow}</p>
             <div>
-              <span>{getTodayLabel().toLocaleUpperCase('tr-TR')}</span>
+              <span>{getTodayLabel(language).toLocaleUpperCase(language === 'tr' ? 'tr-TR' : 'en-US')}</span>
               <button type="button" onClick={restartMorningRitual}>
-                AKIŞI YENİLE
+                {t.refresh}
                 <RefreshCw className="h-4 w-4" strokeWidth={1.8} />
               </button>
             </div>
@@ -621,9 +666,9 @@ export default function HomePage() {
             <div className="tibo-ref-primary">
               <section className="tibo-ref-hero-block">
                 <h1 className="tibo-ref-hero">
-                  Sıradaki görevi başlat<span>.</span>
+                  {t.hero}<span>.</span>
                 </h1>
-                <p>TEK İŞ. KISITLI SÜRE. NET SONUÇ.</p>
+                <p>{t.heroSub}</p>
               </section>
 
               <section className="tibo-ref-task-section">
@@ -639,9 +684,10 @@ export default function HomePage() {
                     onKeyDown={(event) => {
                       if (event.key === 'Enter') startFocus();
                     }}
-                    placeholder="Sıradaki görevi yaz."
+                    placeholder={t.taskPlaceholder}
                     autoFocus
-                    aria-label="Sıradaki görev"
+                    spellCheck={false}
+                    aria-label={t.taskAria}
                   />
                   <span>{taskTitle.length} / 80</span>
                 </div>
@@ -652,13 +698,14 @@ export default function HomePage() {
 
               <section className="tibo-ref-form-grid">
                 <div className="tibo-ref-focus-block">
-                  <h2>ODAK BLOĞU</h2>
-                  <label htmlFor="duration-ref">SÜRE</label>
+                  <h2>{t.focusBlock}</h2>
+                  <label htmlFor="duration-ref">{t.duration}</label>
                   <div className="tibo-ref-time-input">
                     <input
                       id="duration-ref"
                       type="number"
                       min="1"
+                      spellCheck={false}
                       value={duration}
                       onChange={(event) => {
                         setDuration(event.target.value);
@@ -667,22 +714,22 @@ export default function HomePage() {
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') startFocus();
                       }}
-                      aria-label="Süre dakika"
+                      aria-label={t.durationAria}
                     />
                     <Clock className="h-4 w-4" strokeWidth={1.8} />
                   </div>
-                  <p>Süre tahmini: yalnızca bu görev için.</p>
+                  <p>{t.durationHint}</p>
                 </div>
 
                 <div className="tibo-ref-mini-panel">
-                  <h2>DİKKAT TUZAKLARI</h2>
-                  <textarea readOnly value={obstacleText} placeholder="Dikkatini dağıtabilecek şeyleri yaz." />
+                  <h2>{t.traps}</h2>
+                  <textarea readOnly value={obstacleText} placeholder={t.trapsPlaceholder} spellCheck={false} />
                   <span>{obstacleText.length} / 120</span>
                 </div>
 
                 <div className="tibo-ref-mini-panel">
-                  <h2>GÖREV KURALI</h2>
-                  <textarea readOnly value={mainGoal} placeholder="Bu blokta neye odaklanıyorsun?" />
+                  <h2>{t.taskRule}</h2>
+                  <textarea readOnly value={mainGoal} placeholder={t.taskRulePlaceholder} spellCheck={false} />
                   <span>{mainGoal.length} / 120</span>
                 </div>
               </section>
@@ -701,18 +748,18 @@ export default function HomePage() {
 
             <aside className="tibo-ref-right-rail">
               <section>
-                <h2>GÖREV DURUMU</h2>
+                <h2>{t.protocolData}</h2>
                 <dl>
                   <div>
-                    <dt>Tamamlanan Kutu</dt>
+                    <dt>{t.completedBox}</dt>
                     <dd>{rightCompletedLabel}</dd>
                   </div>
                   <div>
-                    <dt>Sapma</dt>
+                    <dt>{t.variance}</dt>
                     <dd className={hasCriticalVariance ? 'is-danger' : 'is-blue'}>{varianceDisplay}</dd>
                   </div>
                   <div>
-                    <dt>Toplam Odak</dt>
+                    <dt>{t.totalFocus}</dt>
                     <dd>{rightTotalFocus}</dd>
                   </div>
                 </dl>
@@ -720,11 +767,11 @@ export default function HomePage() {
 
               <section className="tibo-ref-focus-score">
                 <div className="tibo-ref-focus-score-line">
-                  <span>Tahmin sapması</span>
+                  <span>{t.estimateVariance}</span>
                   <strong>{scoreLabel}</strong>
                   <i />
                 </div>
-                <p className="tibo-ref-focus-note">Tahmin ile gerçek süre farkı.</p>
+                <p className="tibo-ref-focus-note">{t.estimateHint}</p>
                 <div className="tibo-ref-bars" aria-hidden="true">
                   {Array.from({ length: 8 }).map((_, index) => (
                     <span key={index} className={index < activeFocusBars ? 'is-active' : ''} />
